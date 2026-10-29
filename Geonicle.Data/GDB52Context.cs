@@ -23,7 +23,10 @@ public partial class GDB52Context : DbContext
         _сonnString = connString;
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseSqlServer(_сonnString);
+    {
+        if (!optionsBuilder.IsConfigured)
+            optionsBuilder.UseSqlServer(_сonnString);
+    }
 
     public virtual DbSet<Assay> Assays { get; set; }
 

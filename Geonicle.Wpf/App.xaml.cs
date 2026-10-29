@@ -1,10 +1,12 @@
-﻿using DevExpress.Xpf.Core;
+using Data.Models;
+using DevExpress.Xpf.Core;
+using Geonicle.Infrastructure;
+using Geonicle.Wpf.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
 using System.Windows;
 
 namespace Geonicle.Wpf
@@ -14,11 +16,56 @@ namespace Geonicle.Wpf
     /// </summary>
     public partial class App : Application
     {
+        private ServiceProvider? services;
+
         static App()
         {
             CompatibilitySettings.UseLightweightThemes = true;
             ApplicationThemeHelper.Preload(PreloadCategories.Core);
             ApplicationThemeHelper.ApplicationThemeName = Theme.Win11Light.Name;
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
+
+            services = ConfigureServices(configuration);
+
+            var window = new MainWindow
+            {
+                DataContext = services.GetRequiredService<MainViewModel>()
+            };
+            window.Show();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            services?.Dispose();
+            base.OnExit(e);
+        }
+
+        private static ServiceProvider ConfigureServices(IConfiguration configuration)
+        {
+            var connectionString = configuration.GetConnectionString("GDB52")
+                ?? throw new InvalidOperationException("Не задана строка подключения ConnectionStrings:GDB52.");
+
+            var collection = new ServiceCollection();
+
+            collection.AddDbContextFactory<GDB52Context>(options => options.UseSqlServer(connectionString));
+            collection.AddTransient<IBoreholesService, BoreholesService>();
+
+            collection.AddSingleton<MainViewModel>();
+            collection.AddTransient<BoreholesViewModel>();
+            collection.AddTransient<LinesViewModel>();
+            collection.AddTransient<SeamsViewModel>();
+            collection.AddTransient<LithologyViewModel>();
+
+            return collection.BuildServiceProvider();
         }
     }
 }

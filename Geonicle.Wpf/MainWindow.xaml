@@ -11,9 +11,6 @@
     xmlns:views="clr-namespace:Geonicle.Wpf.Views"
     Title="MainWindow" Height="600" Width="1000">
     
-    <dx:ThemedWindow.DataContext>
-        <vm:MainViewModel />
-    </dx:ThemedWindow.DataContext>
     <dx:ThemedWindow.Resources>
         <DataTemplate DataType="{x:Type vm:BoreholesViewModel}">
             <views:BoreholesView />

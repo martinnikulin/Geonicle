@@ -1,19 +1,19 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Data.Models;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.CodeGenerators;
 using Geonicle.Infrastructure;
 using Geonicle.Wpf.Interfaces;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Geonicle.Wpf.ViewModels
 {
     [GenerateViewModel]
-    public partial class BoreholesViewModel : ViewModelBase, ISelectedViewModel
+    public partial class BoreholesViewModel : ViewModelBase, ISelectedViewModel, IDisposable
     {
         public string Title => "Скважины";
-        GDB52Context context;
 
         [GenerateProperty]
         ObservableCollection<Borehole>? boreholes;
@@ -23,11 +23,12 @@ namespace Geonicle.Wpf.ViewModels
 
         readonly IBoreholesService dataService;
 
-        public BoreholesViewModel()
+        public BoreholesViewModel(IBoreholesService dataService)
         {
-            context = new GDB52Context("Server=localhost;Database=GDB520001;Integrated Security=True;TrustServerCertificate=True");
-            dataService = new BoreholesService(context);
+            this.dataService = dataService;
         }
+
+        public void Dispose() => dataService.Dispose();
 
         [GenerateCommand]
         async Task InitializeAsync()

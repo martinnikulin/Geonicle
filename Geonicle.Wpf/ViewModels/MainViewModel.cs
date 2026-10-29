@@ -1,9 +1,8 @@
-using CommunityToolkit.Mvvm.Input;
-using DevExpress.Dialogs.Core.View;
+﻿using CommunityToolkit.Mvvm.Input;
 using DevExpress.Mvvm;
 using Geonicle.Wpf.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -11,7 +10,12 @@ namespace Geonicle.Wpf.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {
-        private readonly Dictionary<Type, object> _viewModels = new Dictionary<Type, object>();
+        private readonly IServiceProvider services;
+
+        public MainViewModel(IServiceProvider services)
+        {
+            this.services = services;
+        }
 
         public object? CurrentViewModel
         {
@@ -21,11 +25,9 @@ namespace Geonicle.Wpf.ViewModels
 
         public void Navigate(Type viewModelType)
         {
-            //if (!_viewModels.TryGetValue(viewModelType, out var viewModel))
-            var viewModel = Activator.CreateInstance(viewModelType)!;
-            _viewModels[viewModelType] = viewModel;
-
-            CurrentViewModel = viewModel;
+            var previous = CurrentViewModel;
+            CurrentViewModel = services.GetRequiredService(viewModelType);
+            (previous as IDisposable)?.Dispose();
         }
 
         [RelayCommand]
