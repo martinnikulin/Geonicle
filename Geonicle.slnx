@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Geonicle.Data/Geonicle.Data.csproj" />
+  <Project Path="Geonicle.Wpf/Geonicle.Wpf.csproj" />
+</Solution>

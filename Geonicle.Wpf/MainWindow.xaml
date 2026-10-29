@@ -1,0 +1,98 @@
+<dx:ThemedWindow
+    x:Class="Geonicle.Wpf.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+    xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+    xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+    xmlns:dxa="http://schemas.devexpress.com/winfx/2008/xaml/accordion"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" 
+    xmlns:vm="clr-namespace:Geonicle.Wpf.ViewModels"
+    xmlns:views="clr-namespace:Geonicle.Wpf.Views"
+    Title="MainWindow" Height="600" Width="1000">
+    
+    <dx:ThemedWindow.DataContext>
+        <vm:MainViewModel />
+    </dx:ThemedWindow.DataContext>
+    <dx:ThemedWindow.Resources>
+        <DataTemplate DataType="{x:Type vm:BoreholesViewModel}">
+            <views:BoreholesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LinesViewModel}">
+            <views:LinesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SeamsViewModel}">
+            <views:SeamsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LithologyViewModel}">
+            <views:LithologyView />
+        </DataTemplate>
+    </dx:ThemedWindow.Resources>
+
+
+    <DockPanel>
+        
+        <dxr:RibbonControl 
+            DockPanel.Dock="Top" 
+            RibbonStyle="Office2019" IsHiddenRibbonCollapsed="False" IsSimplified="False">
+            <dxr:RibbonDefaultPageCategory>
+                <dxr:RibbonPage Caption="Данные">
+                    <dxr:RibbonPageGroup>
+
+                        <dxb:BarButtonItem x:Name="saveItem" 
+                                           Content="Сохранить" 
+                                           Glyph="{dx:DXImage Office2013/Save/Save_16x16.png}"                                           
+                                           LargeGlyph="{dx:DXImage Office2013/Save/Save_32x32.png}"
+                                           Command="{Binding SaveCommand}" />
+                        <!--ItemClick="SaveItem_ItemClick"/>-->
+                        <dxb:BarButtonItem x:Name="newRowItem"
+                                           Content="Добавить строку"
+                                           Glyph="{dx:DXImage Office2013/Actions/Insert_16x16.png}"
+                                           LargeGlyph="{dx:DXImage Office2013/Actions/Insert_32x32.png}"
+                                           Command="{x:Static dxg:GridCommands.AddNewRow}" />
+                        <!--Command="{Binding AddNewRowCommand}" />-->
+                        <dxb:BarButtonItem x:Name="deleteRowItem"
+                                           Content="Удалить строку"
+                                           Glyph="{dx:DXImage Office2013/Reports/DeleteHeader_16x16.png}"
+                                           LargeGlyph="{dx:DXImage Office2013/Reports/DeleteHeader_32x32.png}"
+                                           Command="{x:Static dxg:GridCommands.DeleteFocusedRow}"
+                                           />
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
+        </dxr:RibbonControl>
+
+        <dxr:RibbonStatusBarControl DockPanel.Dock="Bottom">
+            <dxr:RibbonStatusBarControl.RightItems>
+                <dxb:BarButtonItem 
+                    x:Name="printItem" 
+                    Content="Print" 
+                    Glyph="{dx:DXImage SvgImages/Print/Print.svg}"/>
+            </dxr:RibbonStatusBarControl.RightItems>
+        </dxr:RibbonStatusBarControl>
+        
+        <dxa:AccordionControl 
+            DockPanel.Dock="Left" 
+            SelectedItemChanged="AccordionControl_SelectedItemChanged">
+            
+            <dxa:AccordionItem Header="Первичные данные" IsExpanded="True">
+                <dxa:AccordionItem Header="Скважины" Tag="{x:Type vm:BoreholesViewModel}" />
+                <dxa:AccordionItem Header="Разведочные линии" Tag="{x:Type vm:LinesViewModel}" />
+                <dxa:AccordionItem Header="Пласты" Tag="{x:Type vm:SeamsViewModel}" />
+                <dxa:AccordionItem Header="Данные по скважинам" Tag="{x:Type vm:LithologyViewModel}" />
+            </dxa:AccordionItem>
+            <dxa:AccordionItem Header="Подсчет запасов">
+                <dxa:AccordionItem Header="Пластопересечения" />
+                <dxa:AccordionItem Header="Блоки запасов" />
+            </dxa:AccordionItem>
+            <dxa:AccordionItem Header="Запросы" />
+            <dxa:AccordionItem Header="Справочники">
+                <dxa:AccordionItem Header="Породы" />
+                <dxa:AccordionItem Header="Показатели качества" />
+            </dxa:AccordionItem>
+            
+        </dxa:AccordionControl>
+
+        <ContentControl x:Name="mainContent"  Content="{Binding CurrentViewModel}" />
+    </DockPanel>
+</dx:ThemedWindow>
