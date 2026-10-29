@@ -15,9 +15,12 @@ namespace Geonicle.Wpf.ViewModels
         {
             this.services = services;
             SaveCommand = new AsyncCommand(SaveAsync);
+            RefreshCommand = new AsyncCommand(RefreshAsync);
         }
 
         public AsyncCommand SaveCommand { get; }
+
+        public AsyncCommand RefreshCommand { get; }
 
         public object? CurrentViewModel
         {
@@ -57,6 +60,38 @@ namespace Geonicle.Wpf.ViewModels
                 await TrySaveAsync(viewModel);
         }
 
+        /// <summary>Перечитывает данные текущего экрана. Заодно отменяет правки, которые не удаётся сохранить.</summary>
+        private async Task RefreshAsync()
+        {
+            if (CurrentViewModel is not ISelectedViewModel viewModel)
+                return;
+
+            if (viewModel.HasChanges)
+            {
+                var answer = MessageBox.Show(
+                    "Несохранённые изменения будут потеряны. Обновить данные?",
+                    "Обновление",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (answer != MessageBoxResult.Yes)
+                    return;
+            }
+
+            try
+            {
+                await viewModel.LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.InnerException?.Message ?? ex.Message,
+                    "Ошибка загрузки",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
         private static async Task<bool> TrySaveAsync(ISelectedViewModel viewModel)
         {
             try
@@ -66,7 +101,8 @@ namespace Geonicle.Wpf.ViewModels
             }
             catch (Exception ex)
             {
-                var message = ex.InnerException?.Message ?? ex.Message;
+                var message = (ex.InnerException?.Message ?? ex.Message)
+                    + "\n\nИсправьте данные и повторите сохранение либо нажмите «Обновить», чтобы отменить все изменения.";
                 MessageBox.Show(
                     message,
                     "Ошибка сохранения",

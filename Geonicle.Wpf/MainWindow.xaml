@@ -42,6 +42,11 @@
                                            LargeGlyph="{dx:DXImage Office2013/Save/Save_32x32.png}"
                                            Command="{Binding SaveCommand}" />
                         <!--ItemClick="SaveItem_ItemClick"/>-->
+                        <dxb:BarButtonItem x:Name="refreshItem"
+                                           Content="Обновить"
+                                           Glyph="{dx:DXImage Office2013/Actions/Refresh_16x16.png}"
+                                           LargeGlyph="{dx:DXImage Office2013/Actions/Refresh_32x32.png}"
+                                           Command="{Binding RefreshCommand}" />
                         <dxb:BarButtonItem x:Name="newRowItem"
                                            Content="Добавить строку"
                                            Glyph="{dx:DXImage Office2013/Actions/Insert_16x16.png}"
