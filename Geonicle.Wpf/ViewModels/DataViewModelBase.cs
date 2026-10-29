@@ -14,9 +14,9 @@ namespace Geonicle.Wpf.ViewModels
     /// </summary>
     public abstract class DataViewModelBase : ViewModelBase, ISelectedViewModel, IDisposable
     {
-        private readonly IDialogService dialogs;
+        private readonly IUserDialogs dialogs;
 
-        protected DataViewModelBase(IDialogService dialogs)
+        protected DataViewModelBase(IUserDialogs dialogs)
         {
             this.dialogs = dialogs;
             InitializeCommand = new AsyncCommand(LoadAsync, () => !IsInitialized);

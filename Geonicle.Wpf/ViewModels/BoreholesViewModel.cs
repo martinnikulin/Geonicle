@@ -11,7 +11,7 @@ namespace Geonicle.Wpf.ViewModels
     {
         private readonly IBoreholesService dataService;
 
-        public BoreholesViewModel(IBoreholesService dataService, IDialogService dialogs)
+        public BoreholesViewModel(IBoreholesService dataService, IUserDialogs dialogs)
             : base(dialogs)
         {
             this.dataService = dataService;

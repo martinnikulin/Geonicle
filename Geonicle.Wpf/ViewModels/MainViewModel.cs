@@ -12,9 +12,9 @@ namespace Geonicle.Wpf.ViewModels
     {
         private readonly IServiceProvider services;
 
-        private readonly IDialogService dialogs;
+        private readonly IUserDialogs dialogs;
 
-        public MainViewModel(IServiceProvider services, IDialogService dialogs)
+        public MainViewModel(IServiceProvider services, IUserDialogs dialogs)
         {
             this.services = services;
             this.dialogs = dialogs;
