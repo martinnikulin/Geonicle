@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using DevExpress.Mvvm;
+﻿using DevExpress.Mvvm;
 using Geonicle.Wpf.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -8,14 +7,17 @@ using System.Windows;
 
 namespace Geonicle.Wpf.ViewModels
 {
-    public partial class MainViewModel : ViewModelBase
+    public class MainViewModel : ViewModelBase
     {
         private readonly IServiceProvider services;
 
         public MainViewModel(IServiceProvider services)
         {
             this.services = services;
+            SaveCommand = new AsyncCommand(SaveAsync);
         }
+
+        public AsyncCommand SaveCommand { get; }
 
         public object? CurrentViewModel
         {
@@ -49,7 +51,6 @@ namespace Geonicle.Wpf.ViewModels
             return true;
         }
 
-        [RelayCommand]
         private async Task SaveAsync()
         {
             if (CurrentViewModel is ISelectedViewModel viewModel)

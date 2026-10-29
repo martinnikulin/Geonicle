@@ -9,9 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="DevExpress.Mvvm" Version="26.1.6" />
-        <PackageReference Include="DevExpress.Mvvm.CodeGenerators" Version="22.1.1" />
         <PackageReference Include="DevExpress.Wpf" Version="26.1.6" />
         <PackageReference Include="DevExpress.Wpf.ThemesLW" Version="26.1.6" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.13" />
