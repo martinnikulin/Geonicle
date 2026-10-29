@@ -41,7 +41,8 @@
                             ShowGroupPanel="False" 
                             ShowDataNavigator="True"
                             AutoWidth="True"
-                            EditorShowMode="MouseDownFocused">
+                            IncrementalSearchMode="Enabled"
+                            EditorShowMode="MouseUpFocused">
                         <!--ShowUpdateRowButtons="OnCellEditorOpen">-->
                     </dxg:TableView>
                 </dxg:GridControl.View>
@@ -68,7 +69,8 @@
                         ShowGroupPanel="False" 
                         ShowDataNavigator="True"
                         AutoWidth="True"
-                        EditorShowMode="MouseDownFocused">
+                        IncrementalSearchMode="Enabled"
+                            EditorShowMode="MouseUpFocused">
                         <!--ShowUpdateRowButtons="OnCellEditorOpen">-->
                         <dxmvvm:Interaction.Behaviors>
                             <!--<dxmvvm:EventToCommand
