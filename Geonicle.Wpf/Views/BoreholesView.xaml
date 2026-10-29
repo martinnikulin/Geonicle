@@ -50,7 +50,10 @@
                           View="Group" >
             <dxg:GridControl x:Name="surveyGrid" 
                          ItemsSource="{Binding SelectedBorehole.Surveys}"
-                         AutoGenerateColumns="AddNew">
+                         AutoGenerateColumns="AddNew"
+                         RestoreStateKeyFieldName="SurveyId"
+                         RestoreStateOnSourceChange="True"
+                         EnableSmartColumnsGeneration="True">
 
                 <dxg:GridControl.TotalSummary>
                     <dxg:GridSummaryItem Alignment="Left" SummaryType="Count"/>
