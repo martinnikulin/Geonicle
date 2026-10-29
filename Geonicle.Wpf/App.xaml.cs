@@ -1,6 +1,7 @@
 ﻿using Data.Models;
 using DevExpress.Xpf.Core;
 using Geonicle.Infrastructure;
+using Geonicle.Wpf.Services;
 using Geonicle.Wpf.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -70,6 +71,7 @@ namespace Geonicle.Wpf
             collection.AddSingleton<IDbContextFactory<GDB52Context>>(new GDB52ContextFactory(connectionString));
             collection.AddTransient<IBoreholesService, BoreholesService>();
 
+            collection.AddSingleton<IDialogService, DialogService>();
             collection.AddSingleton<MainViewModel>();
             collection.AddTransient<BoreholesViewModel>();
             collection.AddTransient<LinesViewModel>();

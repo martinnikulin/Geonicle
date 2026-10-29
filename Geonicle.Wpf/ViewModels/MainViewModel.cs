@@ -1,8 +1,10 @@
 ﻿using DevExpress.Mvvm;
 using Geonicle.Wpf.Interfaces;
+using Geonicle.Wpf.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Geonicle.Wpf.ViewModels
 {
@@ -10,14 +12,15 @@ namespace Geonicle.Wpf.ViewModels
     {
         private readonly IServiceProvider services;
 
-        public MainViewModel(IServiceProvider services)
+        private readonly IDialogService dialogs;
+
+        public MainViewModel(IServiceProvider services, IDialogService dialogs)
         {
             this.services = services;
+            this.dialogs = dialogs;
             SaveCommand = new AsyncCommand(SaveAsync);
             RefreshCommand = new AsyncCommand(RefreshAsync);
         }
-
-        private IMessageBoxService Dialogs => GetService<IMessageBoxService>();
 
         public AsyncCommand SaveCommand { get; }
 
@@ -37,15 +40,15 @@ namespace Geonicle.Wpf.ViewModels
         {
             if (CurrentViewModel is ISelectedViewModel { HasChanges: true } current)
             {
-                var answer = Dialogs.ShowMessage(
+                var answer = dialogs.Show(
                     "Есть несохранённые изменения. Сохранить их перед переходом?",
                     "Несохранённые изменения",
-                    MessageButton.YesNoCancel,
-                    MessageIcon.Question);
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
 
-                if (answer == MessageResult.Cancel)
+                if (answer == MessageBoxResult.Cancel)
                     return false;
-                if (answer == MessageResult.Yes && !await TrySaveAsync(current))
+                if (answer == MessageBoxResult.Yes && !await TrySaveAsync(current))
                     return false;
             }
 
@@ -61,36 +64,10 @@ namespace Geonicle.Wpf.ViewModels
                 await TrySaveAsync(viewModel);
         }
 
-        /// <summary>Перечитывает данные текущего экрана. Заодно отменяет правки, которые не удаётся сохранить.</summary>
         private async Task RefreshAsync()
         {
-            if (CurrentViewModel is not ISelectedViewModel viewModel)
-                return;
-
-            if (viewModel.HasChanges)
-            {
-                var answer = Dialogs.ShowMessage(
-                    "Несохранённые изменения будут потеряны. Обновить данные?",
-                    "Обновление",
-                    MessageButton.YesNo,
-                    MessageIcon.Warning);
-
-                if (answer != MessageResult.Yes)
-                    return;
-            }
-
-            try
-            {
-                await viewModel.LoadAsync();
-            }
-            catch (Exception ex)
-            {
-                Dialogs.ShowMessage(
-                    ex.InnerException?.Message ?? ex.Message,
-                    "Ошибка загрузки",
-                    MessageButton.OK,
-                    MessageIcon.Error);
-            }
+            if (CurrentViewModel is ISelectedViewModel viewModel)
+                await viewModel.RefreshAsync();
         }
 
         private async Task<bool> TrySaveAsync(ISelectedViewModel viewModel)
@@ -104,11 +81,11 @@ namespace Geonicle.Wpf.ViewModels
             {
                 var message = (ex.InnerException?.Message ?? ex.Message)
                     + "\n\nИсправьте данные и повторите сохранение либо нажмите «Обновить», чтобы отменить все изменения.";
-                Dialogs.ShowMessage(
+                dialogs.Show(
                     message,
                     "Ошибка сохранения",
-                    MessageButton.OK,
-                    MessageIcon.Error);
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 return false;
             }
         }

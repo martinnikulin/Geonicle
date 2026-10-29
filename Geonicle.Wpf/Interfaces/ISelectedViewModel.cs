@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Geonicle.Wpf.Interfaces
 {
@@ -8,6 +8,9 @@ namespace Geonicle.Wpf.Interfaces
         bool HasChanges { get; }
 
         Task LoadAsync();
+
+        /// <summary>Перечитывает данные; при несохранённых правках спрашивает подтверждение.</summary>
+        Task RefreshAsync();
 
         Task SaveAsync();
     }
