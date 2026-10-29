@@ -23,32 +23,56 @@ namespace Geonicle.Wpf.ViewModels
             private set => SetValue(value);
         }
 
-        public void Navigate(Type viewModelType)
+        /// <summary>
+        /// Переключает экран. Если на текущем есть несохранённые изменения, спрашивает пользователя.
+        /// Возвращает false, если переход отменён и остаться нужно на текущем экране.
+        /// </summary>
+        public async Task<bool> NavigateAsync(Type viewModelType)
         {
+            if (CurrentViewModel is ISelectedViewModel { HasChanges: true } current)
+            {
+                var answer = MessageBox.Show(
+                    "Есть несохранённые изменения. Сохранить их перед переходом?",
+                    "Несохранённые изменения",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (answer == MessageBoxResult.Cancel)
+                    return false;
+                if (answer == MessageBoxResult.Yes && !await TrySaveAsync(current))
+                    return false;
+            }
+
             var previous = CurrentViewModel;
             CurrentViewModel = services.GetRequiredService(viewModelType);
             (previous as IDisposable)?.Dispose();
+            return true;
         }
 
         [RelayCommand]
         private async Task SaveAsync()
         {
             if (CurrentViewModel is ISelectedViewModel viewModel)
-            {
-                try
-                {
-                    await viewModel.SaveAsync();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(
-                        ex.Message,
-                        "Ошибка сохранения",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
+                await TrySaveAsync(viewModel);
         }
 
+        private static async Task<bool> TrySaveAsync(ISelectedViewModel viewModel)
+        {
+            try
+            {
+                await viewModel.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var message = ex.InnerException?.Message ?? ex.Message;
+                MessageBox.Show(
+                    message,
+                    "Ошибка сохранения",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return false;
+            }
+        }
     }
 }
