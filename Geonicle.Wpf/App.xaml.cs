@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using DevExpress.Xpf.Core;
 using Geonicle.Infrastructure;
 using Geonicle.Wpf.ViewModels;
@@ -56,7 +56,7 @@ namespace Geonicle.Wpf
 
             var collection = new ServiceCollection();
 
-            collection.AddDbContextFactory<GDB52Context>(options => options.UseSqlServer(connectionString));
+            collection.AddSingleton<IDbContextFactory<GDB52Context>>(new GDB52ContextFactory(connectionString));
             collection.AddTransient<IBoreholesService, BoreholesService>();
 
             collection.AddSingleton<MainViewModel>();
