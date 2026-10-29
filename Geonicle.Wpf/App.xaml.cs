@@ -43,6 +43,17 @@ namespace Geonicle.Wpf
             window.Show();
         }
 
+        private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            // Необработанная ошибка не должна закрывать приложение вместе с несохранёнными данными.
+            MessageBox.Show(
+                e.Exception.InnerException?.Message ?? e.Exception.Message,
+                "Непредвиденная ошибка",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            e.Handled = true;
+        }
+
         protected override void OnExit(ExitEventArgs e)
         {
             services?.Dispose();

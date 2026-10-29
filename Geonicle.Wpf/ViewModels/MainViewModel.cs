@@ -3,7 +3,6 @@ using Geonicle.Wpf.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Geonicle.Wpf.ViewModels
 {
@@ -17,6 +16,8 @@ namespace Geonicle.Wpf.ViewModels
             SaveCommand = new AsyncCommand(SaveAsync);
             RefreshCommand = new AsyncCommand(RefreshAsync);
         }
+
+        private IMessageBoxService Dialogs => GetService<IMessageBoxService>();
 
         public AsyncCommand SaveCommand { get; }
 
@@ -36,15 +37,15 @@ namespace Geonicle.Wpf.ViewModels
         {
             if (CurrentViewModel is ISelectedViewModel { HasChanges: true } current)
             {
-                var answer = MessageBox.Show(
+                var answer = Dialogs.ShowMessage(
                     "Есть несохранённые изменения. Сохранить их перед переходом?",
                     "Несохранённые изменения",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Question);
+                    MessageButton.YesNoCancel,
+                    MessageIcon.Question);
 
-                if (answer == MessageBoxResult.Cancel)
+                if (answer == MessageResult.Cancel)
                     return false;
-                if (answer == MessageBoxResult.Yes && !await TrySaveAsync(current))
+                if (answer == MessageResult.Yes && !await TrySaveAsync(current))
                     return false;
             }
 
@@ -68,13 +69,13 @@ namespace Geonicle.Wpf.ViewModels
 
             if (viewModel.HasChanges)
             {
-                var answer = MessageBox.Show(
+                var answer = Dialogs.ShowMessage(
                     "Несохранённые изменения будут потеряны. Обновить данные?",
                     "Обновление",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                    MessageButton.YesNo,
+                    MessageIcon.Warning);
 
-                if (answer != MessageBoxResult.Yes)
+                if (answer != MessageResult.Yes)
                     return;
             }
 
@@ -84,15 +85,15 @@ namespace Geonicle.Wpf.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                Dialogs.ShowMessage(
                     ex.InnerException?.Message ?? ex.Message,
                     "Ошибка загрузки",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    MessageButton.OK,
+                    MessageIcon.Error);
             }
         }
 
-        private static async Task<bool> TrySaveAsync(ISelectedViewModel viewModel)
+        private async Task<bool> TrySaveAsync(ISelectedViewModel viewModel)
         {
             try
             {
@@ -103,11 +104,11 @@ namespace Geonicle.Wpf.ViewModels
             {
                 var message = (ex.InnerException?.Message ?? ex.Message)
                     + "\n\nИсправьте данные и повторите сохранение либо нажмите «Обновить», чтобы отменить все изменения.";
-                MessageBox.Show(
+                Dialogs.ShowMessage(
                     message,
                     "Ошибка сохранения",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    MessageButton.OK,
+                    MessageIcon.Error);
                 return false;
             }
         }
