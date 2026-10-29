@@ -9,6 +9,7 @@
     xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol" 
     xmlns:ViewModels="clr-namespace:Geonicle.Wpf.ViewModels"
     xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors"
     mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="530">
     
     <dxmvvm:Interaction.Behaviors>
@@ -22,6 +23,7 @@
                           dxlc:LayoutControl.AllowVerticalSizing="True">
             <dxg:GridControl  
                          ItemsSource="{Binding Boreholes}"
+                         behaviors:GridColumnDefaults.Apply="True"
                          SelectedItem="{Binding SelectedBorehole, Mode=TwoWay}"
                          ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
                          AutoGenerateColumns="AddNew"
@@ -50,6 +52,7 @@
                           View="Group" >
             <dxg:GridControl x:Name="surveyGrid" 
                          ItemsSource="{Binding SelectedBorehole.Surveys}"
+                         behaviors:GridColumnDefaults.Apply="True"
                          AutoGenerateColumns="AddNew"
                          RestoreStateKeyFieldName="SurveyId"
                          RestoreStateOnSourceChange="True"
