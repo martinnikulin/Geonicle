@@ -34,6 +34,8 @@ namespace Geonicle.Infrastructure
                 await context.SaveChangesAsync();
         }
 
+        public bool HasChanges => context?.ChangeTracker.HasChanges() ?? false;
+
         public void Dispose()
         {
             context?.Dispose();
@@ -43,6 +45,8 @@ namespace Geonicle.Infrastructure
 
     public interface IBoreholesService : IDisposable
     {
+        bool HasChanges { get; }
+
         Task<ObservableCollection<Borehole>> GetBoreholesAsync();
 
         Task SaveAsync();

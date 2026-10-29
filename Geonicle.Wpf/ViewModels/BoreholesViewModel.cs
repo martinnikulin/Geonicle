@@ -1,59 +1,42 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Data.Models;
-using DevExpress.Mvvm;
-using DevExpress.Mvvm.CodeGenerators;
 using Geonicle.Infrastructure;
-using Geonicle.Wpf.Interfaces;
-using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Geonicle.Wpf.ViewModels
 {
-    [GenerateViewModel]
-    public partial class BoreholesViewModel : ViewModelBase, ISelectedViewModel, IDisposable
+    public class BoreholesViewModel : DataViewModelBase
     {
-        public string Title => "Скважины";
-
-        [GenerateProperty]
-        ObservableCollection<Borehole>? boreholes;
-
-        [GenerateProperty]
-        bool isInitialized;
-
-        readonly IBoreholesService dataService;
+        private readonly IBoreholesService dataService;
 
         public BoreholesViewModel(IBoreholesService dataService)
         {
             this.dataService = dataService;
         }
 
-        public void Dispose() => dataService.Dispose();
+        public override string Title => "Скважины";
 
-        [GenerateCommand]
-        async Task InitializeAsync()
+        public ObservableCollection<Borehole>? Boreholes
         {
-            await LoadAsync();
+            get => GetValue<ObservableCollection<Borehole>?>();
+            private set => SetValue(value);
         }
 
-        public async Task LoadAsync()
+        public Borehole? SelectedBorehole
+        {
+            get => GetValue<Borehole?>();
+            set => SetValue(value);
+        }
+
+        protected override async Task LoadCoreAsync()
         {
             Boreholes = await dataService.GetBoreholesAsync();
-            IsInitialized = true;
-            //Boreholes = new ObservableCollection<Borehole>(data);
         }
 
-        [GenerateProperty]
-        private Borehole? selectedBorehole;
+        protected override Task SaveCoreAsync() => dataService.SaveAsync();
 
-        [GenerateCommand]
-        public async Task SaveAsync()
-        {
-            await dataService.SaveAsync();
-        }
+        protected override bool HasPendingChanges() => dataService.HasChanges;
 
-        bool CanInitialize() => !IsInitialized;
-
-        void OnUsernameChanged(string oldUsername) => InitializeAsyncCommand.RaiseCanExecuteChanged();
+        public override void Dispose() => dataService.Dispose();
     }
 }

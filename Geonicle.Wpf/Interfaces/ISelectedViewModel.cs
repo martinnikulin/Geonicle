@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Geonicle.Wpf.Interfaces
 {
     public interface ISelectedViewModel
     {
-        //ValueTask DisposeAsync();
+        /// <summary>Есть ли несохранённые изменения на экране.</summary>
+        bool HasChanges { get; }
 
         Task LoadAsync();
 
