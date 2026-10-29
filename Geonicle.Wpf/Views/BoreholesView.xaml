@@ -5,6 +5,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+    xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+    xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
     xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol" 
     xmlns:ViewModels="clr-namespace:Geonicle.Wpf.ViewModels"
@@ -39,7 +41,11 @@
                             AutoWidth="True"
                             EditorShowMode="MouseDownFocused">
                         <!--ShowUpdateRowButtons="OnCellEditorOpen">-->
-
+                        <dxg:TableView.RowCellMenuCustomizations>
+                            <dxb:BarButtonItem Content="Обновить"
+                                               Glyph="{dx:DXImage Office2013/Actions/Refresh_16x16.png}"
+                                               ItemClick="RefreshMenuItem_ItemClick" />
+                        </dxg:TableView.RowCellMenuCustomizations>
                     </dxg:TableView>
                 </dxg:GridControl.View>
             </dxg:GridControl>
