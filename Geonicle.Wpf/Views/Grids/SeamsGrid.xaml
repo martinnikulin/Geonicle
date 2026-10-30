@@ -1,0 +1,49 @@
+<UserControl
+    x:Class="Geonicle.Wpf.Views.Grids.SeamsGrid"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
+
+    <!-- DataContext наследуется от экрана (SeamsViewModel). Колонки и настройки грида «Пласты» описаны только здесь. -->
+    <dxg:GridControl
+        ItemsSource="{Binding Seams}"
+        SelectedItem="{Binding SelectedSeam, Mode=TwoWay}"
+        ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
+        AutoGenerateColumns="None"
+        RestoreStateKeyFieldName="SeamId"
+        RestoreStateOnSourceChange="True">
+
+        <dxg:GridControl.Columns>
+            <dxg:GridColumn FieldName="SeamId" Header="ID" ReadOnly="True" />
+            <dxg:GridColumn FieldName="Description" Header="Название" />
+            <dxg:GridColumn FieldName="ShortName" Header="Короткое название" />
+            <dxg:GridColumn FieldName="Strata" Header="Страта" />
+            <dxg:GridColumn FieldName="N" Header="N" />
+            <dxg:GridColumn FieldName="Actual" Header="В подсчет" />
+            <dxg:GridColumn FieldName="AdRoof" Header="Ad кровли" />
+            <dxg:GridColumn FieldName="AdBed" Header="Ad почвы" />
+            <dxg:GridColumn FieldName="DdaRoof" Header="Dda кровли" />
+            <dxg:GridColumn FieldName="DdaBed" Header="Dda почвы" />
+        </dxg:GridControl.Columns>
+
+        <dxg:GridControl.TotalSummary>
+            <dxg:GridSummaryItem Alignment="Left" SummaryType="Count" />
+        </dxg:GridControl.TotalSummary>
+
+        <dxg:GridControl.View>
+            <dxg:TableView
+                menus:GridContextMenu.Menu="{Binding SeamsMenu}"
+                DataNavigatorButtons="Navigation, AddNewRow, DeleteFocusedRow"
+                ShowGroupPanel="False"
+                ShowDataNavigator="True"
+                AutoWidth="True"
+                IncrementalSearchMode="Enabled"
+                UseOnlyCurrentColumnInIncrementalSearch="True"
+                IncrementalSearchClearDelay="1500"
+                EditorShowMode="MouseDownFocused" />
+        </dxg:GridControl.View>
+    </dxg:GridControl>
+</UserControl>
