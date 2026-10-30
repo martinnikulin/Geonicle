@@ -22,14 +22,16 @@
 1. Сервис данных от `EditableDataService`, интерфейс от `IEditableDataService`; регистрация в `App.xaml.cs`.
 2. Модель от `DataViewModelBase`; контекстные меню гридов объявляются в конструкторе (см. ниже).
 3. В `MainWindow.xaml`: `DataTemplate` для модели и пункт `AccordionItem` с `Tag`.
-4. Каждый грид настроен по списку «Стандартные настройки гридов».
+4. Каждый грид — отдельный `UserControl` в `Views/Grids/` со своими колонками, настроенный по списку «Стандартные настройки гридов». Экран (`Views/XxxView.xaml`) только размещает гриды.
 5. Загрузка при открытии — через `InitializeCommand` по событию `Loaded` (как в `BoreholesView.xaml`).
 
 ## Стандартные настройки гридов
-Каждый `GridControl` и его `TableView` (копировать из `Views/BoreholesView.xaml`):
+Каждый грид — отдельный `UserControl` в `Views/Grids/` (образец: `BoreholesGrid.xaml`, `SurveysGrid.xaml`). Колонки описываются явно в этом файле: `AutoGenerateColumns="None"` и `GridColumn` с `FieldName` и `Header`. Подписи колонок и скрытие полей в сгенерированных классах EF (`[DisplayName]`, `[Browsable]`) не храним: скаффолд их стирает. DataContext грид наследует от экрана.
+
+Каждый `GridControl` и его `TableView`:
 
 `GridControl`:
-- `AutoGenerateColumns="AddNew"`, `EnableSmartColumnsGeneration="True"`
+- `AutoGenerateColumns="None"` и явный список `GridControl.Columns` (первичный ключ-счётчик — `ReadOnly="True"`)
 - `RestoreStateKeyFieldName="<первичный ключ сущности>"` и `RestoreStateOnSourceChange="True"` — чтобы при обновлении текущая строка и прокрутка сохранялись
 - `TotalSummary` со счётчиком строк (`GridSummaryItem SummaryType="Count"`, `Alignment="Left"`)
 
@@ -41,8 +43,9 @@
 
 ### Контекстные меню
 - Меню каждого грида — отдельное свойство `GridMenu` в модели экрана, создаётся в конструкторе через `CreateGridMenu()` (в нём уже есть «Обновить»); свои пункты: `.Add("Подпись", команда)`.
-- В XAML только `menus:GridContextMenu.Menu="{Binding ...}"`; код-behind для меню не нужен.
+- В XAML файла грида только `menus:GridContextMenu.Menu="{Binding ...}"` на `TableView`; код-behind для меню не нужен.
 
 ## Журнал решений
 - Привязки к команде главной модели из popup-меню грида ненадёжны, поэтому `GridContextMenu` передаёт команды объектами.
 - Инкрементальный поиск: пробовали `AllowIncrementalSearch` на колонках и `EditorShowMode="MouseUpFocused"` — отказались, оставили настройки `TableView` из списка выше.
+- Колонки гридов: автогенерация не используем, описание колонок каждого грида в отдельном файле `Views/Grids/<Имя>Grid.xaml` (решение пользователя).

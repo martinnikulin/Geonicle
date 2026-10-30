@@ -2,7 +2,6 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Models;
@@ -10,27 +9,19 @@ namespace Data.Models;
 [Table("Survey")]
 public partial class Survey
 {
-    [Browsable(false)]
     public int SurveyId { get; set; }
 
-    [Browsable(false)]
     public int BoreholeId { get; set; }
 
-    [DisplayName("Глубина")]
     public decimal Depth { get; set; }
 
-    [DisplayName("Угол")]
     public decimal Dip { get; set; }
 
-    [DisplayName("Азимут")]
     public decimal Azimuth { get; set; }
 
-    [Browsable(false)]
     public DateTime DateCreated { get; set; }
 
-    [Browsable(false)]
     public DateTime DateModified { get; set; }
 
-    [Browsable(false)]
     public virtual Borehole Borehole { get; set; }
 }

@@ -2,19 +2,15 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Data.Models;
 
 public partial class Borehole
 {
-    [DisplayName("Id")]
     public int BoreholeId { get; set; }
 
-    [DisplayName("Тип")]
     public HoleType HoleType { get; set; }
 
-    [DisplayName("Название")]
     public string HoleName { get; set; }
 
     public decimal X { get; set; }
@@ -23,40 +19,28 @@ public partial class Borehole
 
     public decimal Z { get; set; }
 
-    [DisplayName("Глубина")]
     public decimal Depth { get; set; }
 
-    [DisplayName("Комментарии")]
     public string Comments { get; set; }
 
-    [DisplayName("На карте")]
     public bool OnMap { get; set; }
 
-    [Browsable(false)]
     public DateTime DateCreated { get; set; }
 
-    [Browsable(false)]
     public DateTime DateModified { get; set; }
 
-    [Browsable(false)]
     public virtual GroundWater GroundWater { get; set; }
 
-    [Browsable(false)]
     public virtual ICollection<LineHole> LineHoles { get; set; } = new List<LineHole>();
 
-    [Browsable(false)]
     public virtual ICollection<Lithology> Lithologies { get; set; } = new List<Lithology>();
 
-    [Browsable(false)]
     public virtual ICollection<SampleDef> SampleDefs { get; set; } = new List<SampleDef>();
 
-    [Browsable(false)]
     public virtual ICollection<SeamDef> SeamDefs { get; set; } = new List<SeamDef>();
 
-    [Browsable(false)]
     public virtual ICollection<SurveyCoord> SurveyCoords { get; set; } = new List<SurveyCoord>();
 
-    [Browsable(false)]
     public virtual ICollection<Survey> Surveys { get; set; } = new List<Survey>();
 }
 

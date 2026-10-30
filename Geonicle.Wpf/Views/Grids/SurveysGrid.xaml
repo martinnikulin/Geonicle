@@ -1,0 +1,38 @@
+<UserControl
+    x:Class="Geonicle.Wpf.Views.Grids.SurveysGrid"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
+
+    <!-- DataContext наследуется от экрана (BoreholesViewModel). Колонки и настройки грида «Инклинометрия» описаны только здесь. -->
+    <dxg:GridControl
+        ItemsSource="{Binding SelectedBorehole.Surveys}"
+        AutoGenerateColumns="None"
+        RestoreStateKeyFieldName="SurveyId"
+        RestoreStateOnSourceChange="True">
+
+        <dxg:GridControl.Columns>
+            <dxg:GridColumn FieldName="Depth" Header="Глубина" />
+            <dxg:GridColumn FieldName="Dip" Header="Угол" />
+            <dxg:GridColumn FieldName="Azimuth" Header="Азимут" />
+        </dxg:GridControl.Columns>
+
+        <dxg:GridControl.TotalSummary>
+            <dxg:GridSummaryItem Alignment="Left" SummaryType="Count" />
+        </dxg:GridControl.TotalSummary>
+
+        <dxg:GridControl.View>
+            <dxg:TableView
+                menus:GridContextMenu.Menu="{Binding SurveysMenu}"
+                DataNavigatorButtons="Navigation, AddNewRow, DeleteFocusedRow"
+                ShowGroupPanel="False"
+                ShowDataNavigator="True"
+                AutoWidth="True"
+                IncrementalSearchMode="Enabled"
+                UseOnlyCurrentColumnInIncrementalSearch="True"
+                IncrementalSearchClearDelay="1500"
+                EditorShowMode="MouseDownFocused" />
+        </dxg:GridControl.View>
+    </dxg:GridControl>
+</UserControl>
