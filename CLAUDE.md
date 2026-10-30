@@ -49,6 +49,9 @@
 - Меню каждого грида — отдельное свойство `GridMenu` в модели экрана, создаётся в конструкторе через `CreateGridMenu()` (в нём уже есть «Обновить»); свои пункты: `.Add("Подпись", команда)`.
 - В XAML файла грида только `menus:GridContextMenu.Menu="{Binding ...}"` на `TableView`; код-behind для меню не нужен.
 
+## Данные и EF
+- Ручные настройки модели EF — в `Geonicle.Data/GDB52Context.Partial.cs` (`OnModelCreatingPartial`), сгенерированный `GDB52Context.cs` не правим. Обязательные связи `ClientSetNull` переводятся в `Cascade` (только в трекере EF): иначе удаление строки подчинённого грида из коллекции родителя падает с «association has been severed».
+
 ## Раскладка экранов
 - Размещение и разделение гридов на всех экранах — через `dxlc:LayoutControl`. Подпись грида — `dxlc:LayoutGroup Header="..." View="GroupBox"` (подпись сверху слева, рамка); `View="Group"` заголовок не показывает. У верхних групп `dxlc:LayoutControl.AllowVerticalSizing="True"`.
 
