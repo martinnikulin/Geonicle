@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Geonicle.Wpf.Views.Grids.LineHolesGrid"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -20,9 +20,9 @@
         RestoreStateOnSourceChange="True">
 
         <dxg:GridControl.Columns>
-            <dxg:GridColumn FieldName="LineHoleId" Header="ID" ReadOnly="True" />
+            <dxg:GridColumn Name="colBoreholeId" FieldName="BoreholeId" Header="ID" ReadOnly="True" />
             <dxg:GridColumn FieldName="N" Header="N" />
-            <dxg:GridColumn FieldName="BoreholeId" Header="Скважина">
+            <dxg:GridColumn Name="colBorehole" FieldName="BoreholeId" Header="Скважина">
                 <dxg:GridColumn.EditSettings>
                     <dxe:ComboBoxEditSettings
                         ItemsSource="{Binding Data.BoreholeLookup, Source={StaticResource ViewModelProxy}}"
