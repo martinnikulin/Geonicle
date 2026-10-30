@@ -39,6 +39,9 @@
                             ShowGroupPanel="False" 
                             ShowDataNavigator="True"
                             AutoWidth="True"
+                            IncrementalSearchMode="Enabled"
+                            UseOnlyCurrentColumnInIncrementalSearch="True"
+                            IncrementalSearchClearDelay="1500"
                             EditorShowMode="MouseDownFocused">
                         <!--ShowUpdateRowButtons="OnCellEditorOpen">-->
                     </dxg:TableView>
@@ -65,7 +68,10 @@
                         ShowGroupPanel="False" 
                         ShowDataNavigator="True"
                         AutoWidth="True"
-                        EditorShowMode="MouseDownFocused">
+                        IncrementalSearchMode="Enabled"
+                            UseOnlyCurrentColumnInIncrementalSearch="True"
+                            IncrementalSearchClearDelay="1500"
+                            EditorShowMode="MouseDownFocused">
                         <!--ShowUpdateRowButtons="OnCellEditorOpen">-->
                         <dxmvvm:Interaction.Behaviors>
                             <!--<dxmvvm:EventToCommand
