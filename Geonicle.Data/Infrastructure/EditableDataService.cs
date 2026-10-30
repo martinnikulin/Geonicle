@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Geonicle.Infrastructure
@@ -17,6 +17,10 @@ namespace Geonicle.Infrastructure
         {
             this.contextFactory = contextFactory;
         }
+
+        /// <summary>Текущий контекст; доступен после первого ResetContextAsync (для дополнительных запросов экрана).</summary>
+        protected GDB52Context Context =>
+            context ?? throw new InvalidOperationException("Данные ещё не загружены.");
 
         public bool HasChanges => context?.ChangeTracker.HasChanges() ?? false;
 

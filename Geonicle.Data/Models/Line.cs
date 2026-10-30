@@ -2,49 +2,36 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Data.Models;
 
 public partial class Line
 {
-    [DisplayName("Id")]
     public int LineId { get; set; }
 
-    [DisplayName("Тип")]
     public LineType LineType { get; set; }
 
     public decimal N { get; set; }
 
-    [DisplayName("Разведочная линия")]
     public string Description { get; set; }
 
-    [DisplayName("X начала")]
     public decimal X1 { get; set; }
 
-    [DisplayName("Y начала")]
     public decimal Y1 { get; set; }
 
-    [DisplayName("X конца")]
     public decimal X2 { get; set; }
 
-    [DisplayName("Y конца")]
     public decimal Y2 { get; set; }
 
-    [DisplayName("Блок")]
     public bool Lock { get; set; }
 
-    [Browsable(false)]
     public DateTime DateCreated { get; set; }
 
-    [Browsable(false)]
     public DateTime DateModified { get; set; }
 
-    [Browsable(false)]
     public virtual ICollection<LineHole> LineHoles { get; set; } = new List<LineHole>();
 
-    [Browsable(false)]
     public virtual ICollection<ProfileGeom> ProfileGeoms { get; set; } = new List<ProfileGeom>();
 }
 

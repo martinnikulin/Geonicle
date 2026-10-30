@@ -70,6 +70,7 @@ namespace Geonicle.Wpf
 
             collection.AddSingleton<IDbContextFactory<GDB52Context>>(new GDB52ContextFactory(connectionString));
             collection.AddTransient<IBoreholesService, BoreholesService>();
+            collection.AddTransient<ILinesService, LinesService>();
 
             collection.AddSingleton<IUserDialogs, UserDialogs>();
             collection.AddSingleton<MainViewModel>();

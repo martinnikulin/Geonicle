@@ -41,6 +41,10 @@
 - `DataNavigatorButtons="Navigation, AddNewRow, DeleteFocusedRow"`, `ShowDataNavigator="True"`, `ShowGroupPanel="False"`, `AutoWidth="True"`
 - `menus:GridContextMenu.Menu="{Binding <МенюГрида>}"`
 
+### Выпадающие списки в колонках
+- Справочник для `ComboBoxEditSettings` модель экрана загружает отдельным лёгким запросом (`AsNoTracking`, только код и название, см. `BoreholeLookupItem`) и отдаёт свойством.
+- В XAML грида список берём через `helpers:BindingProxy` (ресурс `Data="{Binding}"`), потому что `EditSettings` не видят DataContext. Образец: `Views/Grids/LineHolesGrid.xaml`.
+
 ### Контекстные меню
 - Меню каждого грида — отдельное свойство `GridMenu` в модели экрана, создаётся в конструкторе через `CreateGridMenu()` (в нём уже есть «Обновить»); свои пункты: `.Add("Подпись", команда)`.
 - В XAML файла грида только `menus:GridContextMenu.Menu="{Binding ...}"` на `TableView`; код-behind для меню не нужен.
