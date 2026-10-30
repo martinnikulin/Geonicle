@@ -12,6 +12,9 @@ public partial class GDB52Context
         // В модели приложения ключом считаем счётчик CoeffId (он уникален); схему БД это не меняет.
         modelBuilder.Entity<Coeff>().HasKey(e => e.CoeffId);
 
+        // В данных Parts.Description бывает NULL, а скаффолд считает поле обязательным (EF падает с «Data is Null»).
+        modelBuilder.Entity<Part>().Property(e => e.Description).IsRequired(false);
+
         // Скаффолд ставит ClientSetNull на обязательные связи. Когда строку подчинённого грида удаляют
         // из коллекции родителя (SelectedLine.LineHoles), EF считает связь разорванной и падает
         // ("association has been severed"). Каскад здесь действует только в трекере EF: схему БД и
