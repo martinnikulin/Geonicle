@@ -25,7 +25,10 @@ public partial class GDB52Context : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
-            optionsBuilder.UseSqlServer(_сonnString);
+            optionsBuilder
+                .UseSqlServer(_сonnString)
+                // В ошибке чтения значения называет сущность и свойство (вместо «Data is Null» без подробностей).
+                .EnableDetailedErrors();
     }
 
     public virtual DbSet<Assay> Assays { get; set; }
