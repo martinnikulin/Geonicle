@@ -45,6 +45,9 @@
 - Меню каждого грида — отдельное свойство `GridMenu` в модели экрана, создаётся в конструкторе через `CreateGridMenu()` (в нём уже есть «Обновить»); свои пункты: `.Add("Подпись", команда)`.
 - В XAML файла грида только `menus:GridContextMenu.Menu="{Binding ...}"` на `TableView`; код-behind для меню не нужен.
 
+## Раскладка экранов
+- Размещение и разделение гридов на всех экранах — через `dxlc:LayoutControl`. Подпись грида — `dxlc:LayoutGroup Header="..." View="GroupBox"` (подпись сверху слева, рамка); `View="Group"` заголовок не показывает. У верхних групп `dxlc:LayoutControl.AllowVerticalSizing="True"`.
+
 ## Журнал решений
 - Привязки к команде главной модели из popup-меню грида ненадёжны, поэтому `GridContextMenu` передаёт команды объектами.
 - Инкрементальный поиск: пробовали `AllowIncrementalSearch` на колонках и `EditorShowMode="MouseUpFocused"` — отказались, оставили настройки `TableView` из списка выше.
