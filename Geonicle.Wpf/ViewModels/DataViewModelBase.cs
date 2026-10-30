@@ -1,4 +1,4 @@
-using DevExpress.Mvvm;
+﻿using DevExpress.Mvvm;
 using Geonicle.Wpf.Interfaces;
 using Geonicle.Wpf.Menus;
 using Geonicle.Wpf.Services;
@@ -19,7 +19,7 @@ namespace Geonicle.Wpf.ViewModels
         protected DataViewModelBase(IUserDialogs dialogs)
         {
             this.dialogs = dialogs;
-            InitializeCommand = new AsyncCommand(LoadAsync, () => !IsInitialized);
+            InitializeCommand = new AsyncCommand(TryLoadAsync, () => !IsInitialized);
             RefreshCommand = new AsyncCommand(RefreshAsync);
         }
 
@@ -63,6 +63,12 @@ namespace Geonicle.Wpf.ViewModels
                     return;
             }
 
+            await TryLoadAsync();
+        }
+
+        /// <summary>Загрузка с показом ошибки пользователю (иначе ошибка команды остаётся незамеченной и экран пустой).</summary>
+        private async Task TryLoadAsync()
+        {
             try
             {
                 await LoadAsync();
