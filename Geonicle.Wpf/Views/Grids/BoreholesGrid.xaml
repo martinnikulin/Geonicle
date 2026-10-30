@@ -1,8 +1,10 @@
-<UserControl
+﻿<UserControl
     x:Class="Geonicle.Wpf.Views.Grids.BoreholesGrid"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:models="clr-namespace:Data.Models;assembly=Geonicle.Data"
     xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
 
     <!-- DataContext наследуется от экрана (BoreholesViewModel). Колонки и настройки грида «Скважины» описаны только здесь. -->
@@ -16,7 +18,13 @@
 
         <dxg:GridControl.Columns>
             <dxg:GridColumn FieldName="BoreholeId" Header="Id" ReadOnly="True" />
-            <dxg:GridColumn FieldName="HoleType" Header="Тип" />
+            <dxg:GridColumn FieldName="HoleType" Header="Тип">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{dxe:EnumItemsSource EnumType={x:Type models:HoleType}}"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
             <dxg:GridColumn FieldName="HoleName" Header="Название" />
             <dxg:GridColumn FieldName="X" Header="X" />
             <dxg:GridColumn FieldName="Y" Header="Y" />
