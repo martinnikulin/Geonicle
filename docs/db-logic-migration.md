@@ -15,7 +15,7 @@ DDL (удаление триггеров и процедур) выполняет
 
 | Триггер | Таблица | Что делает | Статус | Правило |
 |---|---|---|---|---|
-| AfterInsertHoles | Boreholes | замер 0/0/0 в Survey | перенесено (триггер в БД удалён пользователем) | `BoreholeCreatedRule` |
+| AfterInsertHoles | Boreholes | замер 0/0/0 в Survey | перенесено (триггер в БД удалён пользователем); замер добавляется сразу при создании строки в гриде (`BoreholesService`), правило страхует при сохранении | `BoreholeCreatedRule` |
 | AfterInsertHoles | Boreholes | запись `ChangedRecords('Survey', BoreholeId)` | перенесено (триггер в БД удалён пользователем) | `BoreholeSurveyChangedRecordRule` |
 | AfterInsertHoles | Boreholes | строка в LineHoles (LineId = 0) | не переносится (решение пользователя) | — |
 | AfterUpdateHoles | Boreholes | `DateModified` | остаётся в БД | — |

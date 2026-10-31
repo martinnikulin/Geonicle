@@ -1,6 +1,8 @@
 ﻿using Data.Models;
+using Geonicle.Rules.Boreholes;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace Geonicle.Infrastructure
 {
@@ -11,24 +13,31 @@ namespace Geonicle.Infrastructure
         {
         }
 
-        public bool HasNewBoreholes =>
-            Context.ChangeTracker.Entries<Borehole>().Any(e => e.State == EntityState.Added);
-
         public async Task<ObservableCollection<Borehole>> GetBoreholesAsync()
         {
             var context = await ResetContextAsync();
             await context.Boreholes
                 .Include(b => b.Surveys)
                 .LoadAsync();
-            return context.Boreholes.Local.ToObservableCollection();
+
+            var boreholes = context.Boreholes.Local.ToObservableCollection();
+            boreholes.CollectionChanged += Boreholes_CollectionChanged;
+            return boreholes;
+        }
+
+        // Новая строка в гриде сразу получает нулевой замер: он виден в «Инклинометрии» до сохранения.
+        private static void Boreholes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems == null)
+                return;
+
+            foreach (var borehole in e.NewItems.OfType<Borehole>())
+                BoreholeCreatedRule.EnsureZeroSurvey(borehole);
         }
     }
 
     public interface IBoreholesService : IEditableDataService
     {
-        /// <summary>Есть ли несохранённые новые скважины (после их сохранения появятся строки, созданные правилами или триггером).</summary>
-        bool HasNewBoreholes { get; }
-
         Task<ObservableCollection<Borehole>> GetBoreholesAsync();
     }
 }

@@ -41,7 +41,8 @@ public partial class Borehole
 
     public virtual ICollection<SurveyCoord> SurveyCoords { get; set; } = new List<SurveyCoord>();
 
-    public virtual ICollection<Survey> Surveys { get; set; } = new List<Survey>();
+    // Правка вручную (не терять при скаффолде): ObservableCollection, чтобы грид «Инклинометрия» видел замеры, добавленные кодом.
+    public virtual ICollection<Survey> Surveys { get; set; } = new System.Collections.ObjectModel.ObservableCollection<Survey>();
 }
 
 public enum HoleType
