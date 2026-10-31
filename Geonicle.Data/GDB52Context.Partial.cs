@@ -44,8 +44,7 @@ public partial class GDB52Context
         if (changes.Count == 0)
             return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 
-        var triggers = await ChangeRuleRunner.GetTriggersAsync(this, cancellationToken);
-        ChangeRuleRunner.Run(changes, ChangePhase.BeforeSave, triggers, this);
+        ChangeRuleRunner.Run(changes, ChangePhase.BeforeSave, this);
 
         // Свою транзакцию открываем только в реляционной БД и только если внешней нет.
         var transaction = Database.IsRelational() && Database.CurrentTransaction == null
@@ -55,7 +54,7 @@ public partial class GDB52Context
         {
             var count = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 
-            ChangeRuleRunner.Run(changes, ChangePhase.AfterSave, triggers, this);
+            ChangeRuleRunner.Run(changes, ChangePhase.AfterSave, this);
             if (ChangeTracker.HasChanges())
                 count += await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 

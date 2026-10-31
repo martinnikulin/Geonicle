@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Geonicle.Rules
@@ -25,12 +25,6 @@ namespace Geonicle.Rules
 
         ChangePhase Phase { get; }
 
-        /// <summary>
-        /// Имя триггера БД, который заменяет правило. Пока такой триггер есть в базе, правило не выполняется
-        /// (иначе действие сделается дважды); после удаления триггера правило включается само.
-        /// </summary>
-        string? ReplacesTrigger { get; }
-
         void Apply(object entity, GDB52Context db);
     }
 
@@ -42,8 +36,6 @@ namespace Geonicle.Rules
         public abstract EntityState State { get; }
 
         public virtual ChangePhase Phase => ChangePhase.BeforeSave;
-
-        public virtual string? ReplacesTrigger => null;
 
         Type IChangeRule.EntityType => typeof(TEntity);
 

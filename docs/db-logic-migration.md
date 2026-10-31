@@ -4,7 +4,8 @@
 
 - `State` — когда срабатывает (`Added`, `Modified`, `Deleted`).
 - `Phase` — `BeforeSave` (до записи, сущности уходят в тот же запрос) или `AfterSave` (после первой записи, в той же транзакции; нужны ключи, созданные БД).
-- `ReplacesTrigger` — имя триггера БД, который заменяет правило. Пока триггер есть в базе, правило не выполняется (иначе действие сделается дважды), после удаления триггера включается само. Наличие триггера проверяется по `sys.triggers` один раз за время работы приложения.
+
+Правила выполняются всегда. Триггер, который заменяет правило, пользователь удаляет в БД сам и следит за этим сам; в комментарии класса указано, какой триггер он заменяет.
 
 Не переносим: метки `DateCreated`/`DateModified` (остаются в БД, чтобы не писать время клиентских компьютеров) и тяжёлые расчётные процедуры (пока остаются в БД).
 
@@ -14,8 +15,8 @@ DDL (удаление триггеров и процедур) выполняет
 
 | Триггер | Таблица | Что делает | Статус | Правило |
 |---|---|---|---|---|
-| AfterInsertHoles | Boreholes | замер 0/0/0 в Survey | перенесено, ждёт удаления триггера в БД | `BoreholeCreatedRule` |
-| AfterInsertHoles | Boreholes | запись `ChangedRecords('Survey', BoreholeId)` | перенесено, ждёт удаления триггера в БД | `BoreholeSurveyChangedRecordRule` |
+| AfterInsertHoles | Boreholes | замер 0/0/0 в Survey | перенесено (триггер в БД удалён пользователем) | `BoreholeCreatedRule` |
+| AfterInsertHoles | Boreholes | запись `ChangedRecords('Survey', BoreholeId)` | перенесено (триггер в БД удалён пользователем) | `BoreholeSurveyChangedRecordRule` |
 | AfterInsertHoles | Boreholes | строка в LineHoles (LineId = 0) | не переносится (решение пользователя) | — |
 | AfterUpdateHoles | Boreholes | `DateModified` | остаётся в БД | — |
 | AfterUpdateHoles | Boreholes | `ChangedRecords` при смене X, Y, Z, Depth | не начато | — |

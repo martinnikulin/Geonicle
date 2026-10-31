@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Geonicle.Rules.Boreholes
@@ -12,8 +12,6 @@ namespace Geonicle.Rules.Boreholes
         public override EntityState State => EntityState.Added;
 
         public override ChangePhase Phase => ChangePhase.AfterSave;
-
-        public override string? ReplacesTrigger => "AfterInsertHoles";
 
         protected override void Apply(Borehole borehole, GDB52Context db)
         {
