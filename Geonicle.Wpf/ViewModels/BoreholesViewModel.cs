@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using Geonicle.Infrastructure;
 using Geonicle.Wpf.Menus;
 using Geonicle.Wpf.Services;
@@ -44,7 +44,15 @@ namespace Geonicle.Wpf.ViewModels
             Boreholes = await dataService.GetBoreholesAsync();
         }
 
-        protected override Task SaveCoreAsync() => dataService.SaveAsync();
+        protected override async Task SaveCoreAsync()
+        {
+            // Для новой скважины создаётся нулевой замер (правило BoreholeCreatedRule или триггер БД):
+            // перечитываем экран, чтобы замер появился в гриде «Инклинометрия».
+            var hasNew = dataService.HasNewBoreholes;
+            await dataService.SaveAsync();
+            if (hasNew)
+                await LoadCoreAsync();
+        }
 
         protected override bool HasPendingChanges() => dataService.HasChanges;
 

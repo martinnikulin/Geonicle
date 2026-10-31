@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Geonicle.Rules;
+using Microsoft.EntityFrameworkCore;
 
 namespace Data.Models;
 
@@ -25,4 +26,45 @@ public partial class GDB52Context
                 foreignKey.DeleteBehavior = DeleteBehavior.Cascade;
         }
     }
+
+    /// <summary>
+    /// Сохранение с правилами изменений (папка Rules): правила до записи, запись, правила после записи
+    /// (когда известны ключи, созданные БД) и вторая запись; всё в одной транзакции.
+    /// </summary>
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        if (!ChangeRuleRunner.HasRules)
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        ChangeTracker.DetectChanges();
+        var changes = ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(e => (e.Entity, e.State))
+            .ToList();
+        if (changes.Count == 0)
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        var triggers = await ChangeRuleRunner.GetTriggersAsync(this, cancellationToken);
+        ChangeRuleRunner.Run(changes, ChangePhase.BeforeSave, triggers, this);
+
+        // Свою транзакцию открываем только в реляционной БД и только если внешней нет.
+        var transaction = Database.IsRelational() && Database.CurrentTransaction == null
+            ? await Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        await using (transaction)
+        {
+            var count = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+            ChangeRuleRunner.Run(changes, ChangePhase.AfterSave, triggers, this);
+            if (ChangeTracker.HasChanges())
+                count += await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+            if (transaction != null)
+                await transaction.CommitAsync(cancellationToken);
+            return count;
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        => throw new NotSupportedException("Правила изменений работают только в SaveChangesAsync.");
 }

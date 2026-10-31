@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 
@@ -10,6 +10,9 @@ namespace Geonicle.Infrastructure
             : base(contextFactory)
         {
         }
+
+        public bool HasNewBoreholes =>
+            Context.ChangeTracker.Entries<Borehole>().Any(e => e.State == EntityState.Added);
 
         public async Task<ObservableCollection<Borehole>> GetBoreholesAsync()
         {
@@ -23,6 +26,9 @@ namespace Geonicle.Infrastructure
 
     public interface IBoreholesService : IEditableDataService
     {
+        /// <summary>Есть ли несохранённые новые скважины (после их сохранения появятся строки, созданные правилами или триггером).</summary>
+        bool HasNewBoreholes { get; }
+
         Task<ObservableCollection<Borehole>> GetBoreholesAsync();
     }
 }
