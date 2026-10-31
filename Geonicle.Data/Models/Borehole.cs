@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -31,18 +32,17 @@ public partial class Borehole
 
     public virtual GroundWater GroundWater { get; set; }
 
-    public virtual ICollection<LineHole> LineHoles { get; set; } = new List<LineHole>();
+    public virtual ICollection<LineHole> LineHoles { get; set; } = new ObservableCollection<LineHole>();
 
-    public virtual ICollection<Lithology> Lithologies { get; set; } = new List<Lithology>();
+    public virtual ICollection<Lithology> Lithologies { get; set; } = new ObservableCollection<Lithology>();
 
-    public virtual ICollection<SampleDef> SampleDefs { get; set; } = new List<SampleDef>();
+    public virtual ICollection<SampleDef> SampleDefs { get; set; } = new ObservableCollection<SampleDef>();
 
-    public virtual ICollection<SeamDef> SeamDefs { get; set; } = new List<SeamDef>();
+    public virtual ICollection<SeamDef> SeamDefs { get; set; } = new ObservableCollection<SeamDef>();
 
-    public virtual ICollection<SurveyCoord> SurveyCoords { get; set; } = new List<SurveyCoord>();
+    public virtual ICollection<SurveyCoord> SurveyCoords { get; set; } = new ObservableCollection<SurveyCoord>();
 
-    // Правка вручную (не терять при скаффолде): ObservableCollection, чтобы грид «Инклинометрия» видел замеры, добавленные кодом.
-    public virtual ICollection<Survey> Surveys { get; set; } = new System.Collections.ObjectModel.ObservableCollection<Survey>();
+    public virtual ICollection<Survey> Surveys { get; set; } = new ObservableCollection<Survey>();
 }
 
 public enum HoleType

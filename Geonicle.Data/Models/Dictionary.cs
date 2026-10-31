@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -27,7 +28,7 @@ public partial class Dictionary
 
     public string Bdcode { get; set; }
 
-    public virtual ICollection<AssayVarsCr> AssayVarsCrs { get; set; } = new List<AssayVarsCr>();
+    public virtual ICollection<AssayVarsCr> AssayVarsCrs { get; set; } = new ObservableCollection<AssayVarsCr>();
 
-    public virtual ICollection<Grade> Grades { get; set; } = new List<Grade>();
+    public virtual ICollection<Grade> Grades { get; set; } = new ObservableCollection<Grade>();
 }

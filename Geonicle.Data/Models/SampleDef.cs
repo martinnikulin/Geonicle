@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -37,9 +38,9 @@ public partial class SampleDef
 
     public DateTime DateModified { get; set; }
 
-    public virtual ICollection<Assay> Assays { get; set; } = new List<Assay>();
+    public virtual ICollection<Assay> Assays { get; set; } = new ObservableCollection<Assay>();
 
     public virtual Borehole Borehole { get; set; }
 
-    public virtual ICollection<Hssamp> Hssamps { get; set; } = new List<Hssamp>();
+    public virtual ICollection<Hssamp> Hssamps { get; set; } = new ObservableCollection<Hssamp>();
 }

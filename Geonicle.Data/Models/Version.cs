@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -17,5 +18,5 @@ public partial class Version
 
     public DateTime DateModified { get; set; }
 
-    public virtual ICollection<Block> Blocks { get; set; } = new List<Block>();
+    public virtual ICollection<Block> Blocks { get; set; } = new ObservableCollection<Block>();
 }

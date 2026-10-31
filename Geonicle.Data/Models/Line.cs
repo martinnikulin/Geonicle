@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Data.Models;
@@ -30,9 +31,9 @@ public partial class Line
 
     public DateTime DateModified { get; set; }
 
-    public virtual ICollection<LineHole> LineHoles { get; set; } = new List<LineHole>();
+    public virtual ICollection<LineHole> LineHoles { get; set; } = new ObservableCollection<LineHole>();
 
-    public virtual ICollection<ProfileGeom> ProfileGeoms { get; set; } = new List<ProfileGeom>();
+    public virtual ICollection<ProfileGeom> ProfileGeoms { get; set; } = new ObservableCollection<ProfileGeom>();
 }
 
 public enum LineType

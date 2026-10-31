@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -45,5 +46,5 @@ public partial class Condition
 
     public string Variant2 { get; set; }
 
-    public virtual ICollection<Block> Blocks { get; set; } = new List<Block>();
+    public virtual ICollection<Block> Blocks { get; set; } = new ObservableCollection<Block>();
 }

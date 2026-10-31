@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -55,9 +56,9 @@ public partial class Block
 
     public int Feature { get; set; }
 
-    public virtual ICollection<BlockDetail> BlockDetails { get; set; } = new List<BlockDetail>();
+    public virtual ICollection<BlockDetail> BlockDetails { get; set; } = new ObservableCollection<BlockDetail>();
 
-    public virtual ICollection<BlockUnit> BlockUnits { get; set; } = new List<BlockUnit>();
+    public virtual ICollection<BlockUnit> BlockUnits { get; set; } = new ObservableCollection<BlockUnit>();
 
     public virtual Condition Condition { get; set; }
 

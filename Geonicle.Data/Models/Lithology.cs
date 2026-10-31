@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -47,9 +48,9 @@ public partial class Lithology
 
     public virtual Borehole Borehole { get; set; }
 
-    public virtual ICollection<LithRe> LithRes { get; set; } = new List<LithRe>();
+    public virtual ICollection<LithRe> LithRes { get; set; } = new ObservableCollection<LithRe>();
 
-    public virtual ICollection<SeamDef> SeamDefDepthFromNavigations { get; set; } = new List<SeamDef>();
+    public virtual ICollection<SeamDef> SeamDefDepthFromNavigations { get; set; } = new ObservableCollection<SeamDef>();
 
-    public virtual ICollection<SeamDef> SeamDefDepthToNavigations { get; set; } = new List<SeamDef>();
+    public virtual ICollection<SeamDef> SeamDefDepthToNavigations { get; set; } = new ObservableCollection<SeamDef>();
 }

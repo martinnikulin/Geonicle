@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -73,13 +74,13 @@ public partial class SeamDef
 
     public virtual Borehole Borehole { get; set; }
 
-    public virtual ICollection<Composite> Composites { get; set; } = new List<Composite>();
+    public virtual ICollection<Composite> Composites { get; set; } = new ObservableCollection<Composite>();
 
     public virtual Lithology DepthFromNavigation { get; set; }
 
     public virtual Lithology DepthToNavigation { get; set; }
 
-    public virtual ICollection<Hssamp> Hssamps { get; set; } = new List<Hssamp>();
+    public virtual ICollection<Hssamp> Hssamps { get; set; } = new ObservableCollection<Hssamp>();
 
     public virtual Seam Seam { get; set; }
 }

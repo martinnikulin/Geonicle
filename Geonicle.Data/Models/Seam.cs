@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Data.Models;
 
@@ -45,15 +46,15 @@ public partial class Seam
 
     public DateTime DateModified { get; set; }
 
-    public virtual ICollection<Average> Averages { get; set; } = new List<Average>();
+    public virtual ICollection<Average> Averages { get; set; } = new ObservableCollection<Average>();
 
-    public virtual ICollection<Coeff> Coeffs { get; set; } = new List<Coeff>();
+    public virtual ICollection<Coeff> Coeffs { get; set; } = new ObservableCollection<Coeff>();
 
-    public virtual ICollection<Part> Parts { get; set; } = new List<Part>();
+    public virtual ICollection<Part> Parts { get; set; } = new ObservableCollection<Part>();
 
-    public virtual ICollection<PlanGeom> PlanGeoms { get; set; } = new List<PlanGeom>();
+    public virtual ICollection<PlanGeom> PlanGeoms { get; set; } = new ObservableCollection<PlanGeom>();
 
-    public virtual ICollection<SeamCond> SeamConds { get; set; } = new List<SeamCond>();
+    public virtual ICollection<SeamCond> SeamConds { get; set; } = new ObservableCollection<SeamCond>();
 
-    public virtual ICollection<SeamDef> SeamDefs { get; set; } = new List<SeamDef>();
+    public virtual ICollection<SeamDef> SeamDefs { get; set; } = new ObservableCollection<SeamDef>();
 }
