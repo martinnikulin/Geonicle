@@ -1,14 +1,13 @@
 ﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 
 namespace Geonicle.Infrastructure
 {
     public class SeamsService : EditableDataService, ISeamsService
     {
-        public SeamsService(IServiceScopeFactory scopeFactory)
-            : base(scopeFactory)
+        public SeamsService(IDbContextFactory<GDB52Context> contextFactory)
+            : base(contextFactory)
         {
         }
 

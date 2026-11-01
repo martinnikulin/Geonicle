@@ -14,7 +14,7 @@
 ## Архитектура
 - MVVM только на `DevExpress.Mvvm` (`ViewModelBase`, `GetValue/SetValue`, `AsyncCommand`). `CommunityToolkit.Mvvm` и генераторы кода не используем.
 - DI: контейнер собирается в `App.xaml.cs`; модели экранов и сервисы регистрируются там, `MainViewModel` создаёт экраны из контейнера.
-- Строка подключения — `appsettings.json` (`ConnectionStrings:GDB52`). Контекст регистрируется через `AddGeonicleData` (`AddDbContext` с триггерами); `IDbContextFactory` и `AddDbContextFactory` не используем (триггерам нужен контекст из той же области DI).
+- Строка подключения — `appsettings.json` (`ConnectionStrings:GDB52`). Контексты создаются через `IDbContextFactory<GDB52Context>` (`GDB52ContextFactory`), `AddDbContextFactory` не использовать.
 - Данные экрана: сервис наследует `EditableDataService` (владеет контекстом на время жизни экрана); модель экрана наследует `DataViewModelBase` (Load/Refresh/Save, `HasChanges`).
 - Диалоги из моделей — только через `IUserDialogs`. Имя `IDialogService` занято в DevExpress.Mvvm, не использовать.
 - При уходе с экрана с несохранёнными изменениями спрашиваем (см. `MainViewModel.NavigateAsync`). Закрытие окна пока не обрабатываем.
@@ -58,12 +58,10 @@
 - У `Coeffs` в модели приложения ключ — `CoeffId` (в БД составной): иначе EF не даёт менять в гриде прослой, тип и марку у существующей строки. Это в `GDB52Context.Partial.cs`.
 - Справочники для списков в колонках — `LookupItem(Id, Name)` (`ValueMember="Id" DisplayMember="Name"`), по одному свойству на справочник в модели экрана.
 
-## Логика, перенесённая из БД
-- Триггеры БД переносим в триггеры библиотеки EntityFrameworkCore.Triggered (форк AutoGuru 5.0.0): `Geonicle.Data/Triggers/`, один класс на триггер (`IBeforeSaveTrigger<T>` / `IAfterSaveTrigger<T>`), находятся автоматически (`AddGeonicleData`). Реестр и описание — `docs/db-logic-migration.md`; новый триггер и смену его статуса записываем туда же.
-- Контекст создаётся контейнером DI в области (scope) на каждую загрузку экрана (`EditableDataService`), триггеры получают тот же контекст. Сохранение — `EditableDataService.SaveAsync` (в транзакции). Изменения, сделанные в `IAfterSaveTrigger`, триггер записывает сам (`SaveChangesAsync`).
-- Триггеры выполняются всегда; проверки наличия триггера в БД нет. Триггер БД, который заменил код, пользователь удаляет сам (в комментарии класса указано, какой).
-- `DateCreated`/`DateModified` всегда проставляет сервер БД, в коде их не пишем; расчётные процедуры пока остаются в БД. DDL делает пользователь.
-- Как в Delphi-версии, строки, которые раньше создавал триггер, должны появляться в гриде сразу при создании родителя, до сохранения (замер 0/0/0 у новой скважины: `BoreholesService.Boreholes_CollectionChanged`). Для этого все зависимые коллекции в моделях — `ObservableCollection` (`public virtual ICollection<T> X { get; set; } = new ObservableCollection<T>();`, как в XAF), поэтому код может добавлять подчинённые строки, а связанный грид их сразу видит. Новые модели пишем так же; триггер `BeforeSave` страхует остальные пути.
+## Логика БД и код
+- Триггеры и хранимые процедуры остаются в БД; перехвата `SaveChanges` в коде нет (ни собственного, ни `EntityFrameworkCore.Triggered`: пробовали и отказались). В код переносим только то, что пользователь явно убирает из БД. Реестр — `docs/db-logic-migration.md`, обновляем вместе с кодом.
+- Перенесено: нулевой замер у новой скважины. Как в Delphi-версии, он появляется в гриде сразу при создании строки, до сохранения (`BoreholesService.Boreholes_CollectionChanged`). Для этого все зависимые коллекции в моделях — `ObservableCollection` (`public virtual ICollection<T> X { get; set; } = new ObservableCollection<T>();`, как в XAF), поэтому код может добавлять подчинённые строки, а связанный грид их сразу видит. Новые модели пишем так же.
+- `DateCreated`/`DateModified` всегда проставляет сервер БД, в коде их не пишем. DDL делает пользователь.
 
 ## Раскладка экранов
 - Размещение и разделение гридов на всех экранах — через `dxlc:LayoutControl`. Подпись грида — `dxlc:LayoutGroup Header="..." View="GroupBox"` (подпись сверху слева, рамка); `View="Group"` заголовок не показывает. У верхних групп `dxlc:LayoutControl.AllowVerticalSizing="True"`.

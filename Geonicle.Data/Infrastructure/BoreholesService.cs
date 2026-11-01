@@ -1,7 +1,5 @@
 ﻿using Data.Models;
-using Geonicle.Triggers.Boreholes;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
@@ -9,8 +7,8 @@ namespace Geonicle.Infrastructure
 {
     public class BoreholesService : EditableDataService, IBoreholesService
     {
-        public BoreholesService(IServiceScopeFactory scopeFactory)
-            : base(scopeFactory)
+        public BoreholesService(IDbContextFactory<GDB52Context> contextFactory)
+            : base(contextFactory)
         {
         }
 
@@ -27,13 +25,23 @@ namespace Geonicle.Infrastructure
         }
 
         // Новая строка в гриде сразу получает нулевой замер: он виден в «Инклинометрии» до сохранения.
+        // Раньше его создавал триггер БД AfterInsertHoles.
         private static void Boreholes_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action != NotifyCollectionChangedAction.Add || e.NewItems == null)
                 return;
 
             foreach (var borehole in e.NewItems.OfType<Borehole>())
-                BoreholeCreatedTrigger.EnsureZeroSurvey(borehole);
+                EnsureZeroSurvey(borehole);
+        }
+
+        /// <summary>Добавляет нулевой замер, если замера с глубиной 0 ещё нет (уникальный индекс BoreholeId + Depth).</summary>
+        private static void EnsureZeroSurvey(Borehole borehole)
+        {
+            if (borehole.Surveys.Any(s => s.Depth == 0))
+                return;
+
+            borehole.Surveys.Add(new Survey { Depth = 0, Dip = 0, Azimuth = 0 });
         }
     }
 
