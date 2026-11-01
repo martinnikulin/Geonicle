@@ -1,6 +1,7 @@
 ﻿using Data.Models;
-using Geonicle.Rules.Boreholes;
+using Geonicle.Triggers.Boreholes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
@@ -8,8 +9,8 @@ namespace Geonicle.Infrastructure
 {
     public class BoreholesService : EditableDataService, IBoreholesService
     {
-        public BoreholesService(IDbContextFactory<GDB52Context> contextFactory)
-            : base(contextFactory)
+        public BoreholesService(IServiceScopeFactory scopeFactory)
+            : base(scopeFactory)
         {
         }
 
@@ -32,7 +33,7 @@ namespace Geonicle.Infrastructure
                 return;
 
             foreach (var borehole in e.NewItems.OfType<Borehole>())
-                BoreholeCreatedRule.EnsureZeroSurvey(borehole);
+                BoreholeCreatedTrigger.EnsureZeroSurvey(borehole);
         }
     }
 

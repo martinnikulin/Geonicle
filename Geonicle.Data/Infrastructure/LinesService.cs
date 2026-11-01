@@ -1,13 +1,14 @@
-using Data.Models;
+﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 
 namespace Geonicle.Infrastructure
 {
     public class LinesService : EditableDataService, ILinesService
     {
-        public LinesService(IDbContextFactory<GDB52Context> contextFactory)
-            : base(contextFactory)
+        public LinesService(IServiceScopeFactory scopeFactory)
+            : base(scopeFactory)
         {
         }
 

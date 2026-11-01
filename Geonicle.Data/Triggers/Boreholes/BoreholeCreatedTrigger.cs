@@ -1,19 +1,23 @@
-﻿using Data.Models;
-using Microsoft.EntityFrameworkCore;
+using Data.Models;
+using EntityFrameworkCore.Triggered;
 
-namespace Geonicle.Rules.Boreholes
+namespace Geonicle.Triggers.Boreholes
 {
     /// <summary>
     /// Новая скважина получает нулевой замер инклинометрии (глубина 0, угол 0, азимут 0).
-    /// Заменяет часть триггера AfterInsertHoles. Запись в LineHoles больше не создаётся.
+    /// Заменяет часть триггера БД AfterInsertHoles. Запись в LineHoles больше не создаётся.
     /// Замер добавляется сразу при создании строки в гриде (BoreholesService), чтобы пользователь мог вводить
-    /// следующие замеры до сохранения; при сохранении это правило страхует остальные пути добавления скважины.
+    /// следующие замеры до сохранения; при сохранении этот триггер страхует остальные пути добавления скважины.
     /// </summary>
-    public class BoreholeCreatedRule : ChangeRule<Borehole>
+    public class BoreholeCreatedTrigger : IBeforeSaveTrigger<Borehole>
     {
-        public override EntityState State => EntityState.Added;
+        public Task BeforeSave(ITriggerContext<Borehole> context, CancellationToken cancellationToken)
+        {
+            if (context.ChangeType == ChangeType.Added)
+                EnsureZeroSurvey(context.Entity);
 
-        protected override void Apply(Borehole borehole, GDB52Context db) => EnsureZeroSurvey(borehole);
+            return Task.CompletedTask;
+        }
 
         /// <summary>Добавляет нулевой замер, если замера с глубиной 0 ещё нет (уникальный индекс BoreholeId + Depth).</summary>
         public static void EnsureZeroSurvey(Borehole borehole)

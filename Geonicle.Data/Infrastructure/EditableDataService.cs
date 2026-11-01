@@ -1,21 +1,24 @@
 ﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Geonicle.Infrastructure
 {
     /// <summary>
     /// Владеет контекстом на время жизни экрана: правки накапливаются в нём до SaveAsync.
-    /// Каждая загрузка начинает с нового контекста, поэтому данные всегда свежие.
+    /// Каждая загрузка начинает с нового контекста (в новой области DI), поэтому данные всегда свежие,
+    /// а триггеры из папки Triggers получают тот же контекст, что и сервис.
     /// Наследники только описывают, что загружать.
     /// </summary>
     public abstract class EditableDataService : IEditableDataService
     {
-        private readonly IDbContextFactory<GDB52Context> contextFactory;
+        private readonly IServiceScopeFactory scopeFactory;
+        private IServiceScope? scope;
         private GDB52Context? context;
 
-        protected EditableDataService(IDbContextFactory<GDB52Context> contextFactory)
+        protected EditableDataService(IServiceScopeFactory scopeFactory)
         {
-            this.contextFactory = contextFactory;
+            this.scopeFactory = scopeFactory;
         }
 
         /// <summary>Текущий контекст; доступен после первого ResetContextAsync (для дополнительных запросов экрана).</summary>
@@ -24,24 +27,31 @@ namespace Geonicle.Infrastructure
 
         public bool HasChanges => context?.ChangeTracker.HasChanges() ?? false;
 
+        /// <summary>Сохранение в одной транзакции: запись, триггеры «после сохранения» и их записи фиксируются вместе.</summary>
         public async Task SaveAsync()
         {
-            if (context != null)
-                await context.SaveChangesAsync();
+            if (context == null)
+                return;
+
+            await using var transaction = await context.Database.BeginTransactionAsync();
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
 
         public void Dispose()
         {
-            context?.Dispose();
             context = null;
+            scope?.Dispose();
+            scope = null;
         }
 
         /// <summary>Освобождает прежний контекст (вместе с несохранёнными правками) и создаёт новый.</summary>
-        protected async Task<GDB52Context> ResetContextAsync()
+        protected Task<GDB52Context> ResetContextAsync()
         {
-            context?.Dispose();
-            context = await contextFactory.CreateDbContextAsync();
-            return context;
+            Dispose();
+            scope = scopeFactory.CreateScope();
+            context = scope.ServiceProvider.GetRequiredService<GDB52Context>();
+            return Task.FromResult(context);
         }
     }
 
