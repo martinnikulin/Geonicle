@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Geonicle.Validation
 {
@@ -32,7 +32,8 @@ namespace Geonicle.Validation
                     errors.Add($"{description}: {failure.ErrorMessage}");
             }
 
-            return errors;
+            // Одинаковые сообщения (например, об одном и том же дубликате у двух строк) показываем один раз.
+            return errors.Distinct().ToList();
         }
     }
 }
