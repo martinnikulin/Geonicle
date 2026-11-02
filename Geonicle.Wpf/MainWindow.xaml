@@ -68,9 +68,9 @@
 
                     <!-- Видна на экранах, где данные фильтруются по разделяющему прослою. -->
                     <dxr:RibbonPageGroup Caption="Прослой" IsVisible="{Binding IsInterbedGroupVisible}">
+                        <dxb:BarStaticItem x:Name="interbedCaptionItem" Content="Разделяющий прослой" />
                         <dxb:BarEditItem x:Name="interbedItem"
-                                         Content="Разделяющий прослой"
-                                         EditWidth="220"
+                                         EditWidth="120"
                                          EditValue="{Binding Filters.SelectedInterbedId, Mode=TwoWay}">
                             <dxb:BarEditItem.EditSettings>
                                 <dxe:ComboBoxEditSettings
@@ -83,10 +83,10 @@
                     </dxr:RibbonPageGroup>
 
                     <!-- Видна только на экране «Данные по скважинам». -->
-                    <dxr:RibbonPageGroup Caption="Линия и скважина" IsVisible="{Binding IsLineBoreholeGroupVisible}">
+                    <dxr:RibbonPageGroup Caption="Скважина" IsVisible="{Binding IsLineBoreholeGroupVisible}">
                         <dxb:BarEditItem x:Name="lineItem"
                                          Content="Разведочная линия"
-                                         EditWidth="260"
+                                         EditWidth="120"
                                          EditValue="{Binding Filters.SelectedLineId, Mode=TwoWay}">
                             <dxb:BarEditItem.EditSettings>
                                 <dxg:LookUpEditSettings
@@ -103,7 +103,7 @@
                                                     <dxg:GridColumn FieldName="Description" Header="Название" Width="200" />
                                                 </dxg:GridControl.Columns>
                                                 <dxg:GridControl.View>
-                                                    <dxg:TableView AutoWidth="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
+                                                    <dxg:TableView AutoWidth="True" ShowColumnHeaders="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
                                                 </dxg:GridControl.View>
                                             </dxg:GridControl>
                                         </ControlTemplate>
@@ -114,7 +114,7 @@
 
                         <dxb:BarEditItem x:Name="boreholeItem"
                                          Content="Скважины"
-                                         EditWidth="260"
+                                         EditWidth="120"
                                          EditValue="{Binding Filters.SelectedBoreholeId, Mode=TwoWay}">
                             <dxb:BarEditItem.EditSettings>
                                 <dxg:LookUpEditSettings
@@ -131,7 +131,7 @@
                                                     <dxg:GridColumn FieldName="HoleName" Header="Название" Width="200" />
                                                 </dxg:GridControl.Columns>
                                                 <dxg:GridControl.View>
-                                                    <dxg:TableView AutoWidth="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
+                                                    <dxg:TableView AutoWidth="True" ShowColumnHeaders="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
                                                 </dxg:GridControl.View>
                                             </dxg:GridControl>
                                         </ControlTemplate>
