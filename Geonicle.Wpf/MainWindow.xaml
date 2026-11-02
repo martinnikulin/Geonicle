@@ -93,6 +93,7 @@
                                     ItemsSource="{Binding Data.Filters.Lines, Source={StaticResource ViewModelProxy}}"
                                     ValueMember="LineId"
                                     DisplayMember="Description"
+                                    AutoPopulateColumns="False"
                                     IsTextEditable="False">
                                     <dxg:LookUpEditSettings.PopupContentTemplate>
                                         <ControlTemplate>
@@ -121,6 +122,7 @@
                                     ItemsSource="{Binding Data.Filters.Boreholes, Source={StaticResource ViewModelProxy}}"
                                     ValueMember="BoreholeId"
                                     DisplayMember="HoleName"
+                                    AutoPopulateColumns="False"
                                     IsTextEditable="False">
                                     <dxg:LookUpEditSettings.PopupContentTemplate>
                                         <ControlTemplate>
