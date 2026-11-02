@@ -64,6 +64,10 @@
 - Перенесено: нулевой замер у новой скважины. Как в Delphi-версии, он появляется в гриде сразу при создании строки, до сохранения (`BoreholesService.Boreholes_CollectionChanged`). Для этого все зависимые коллекции в моделях — `ObservableCollection` (`public virtual ICollection<T> X { get; set; } = new ObservableCollection<T>();`, как в XAF), поэтому код может добавлять подчинённые строки, а связанный грид их сразу видит. Новые модели пишем так же.
 - `DateCreated`/`DateModified` всегда проставляет сервер БД, в коде их не пишем. DDL делает пользователь.
 
+## Проверка вводимых данных
+- Правила проверки — FluentValidation (пакет в `Geonicle.Data`), папка `Geonicle.Data/Validation/`, один класс на сущность (`<Сущность>Validator : AbstractValidator<T>`), сообщения по-русски прямо в правилах (`WithMessage`), ограничения согласуем со схемой БД. Образец: `BoreholeValidator`.
+- FluentValidation проверяет только объекты и ничего не знает о гриде. Связка с гридом (`ValidateRow`), проверка при сохранении и регистрация в DI пока не сделаны; делаем по отдельному решению.
+
 ## Раскладка экранов
 - Размещение и разделение гридов на всех экранах — через `dxlc:LayoutControl`. Подпись грида — `dxlc:LayoutGroup Header="..." View="GroupBox"` (подпись сверху слева, рамка); `View="Group"` заголовок не показывает. У верхних групп `dxlc:LayoutControl.AllowVerticalSizing="True"`.
 
