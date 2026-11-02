@@ -5,7 +5,8 @@
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
     xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
     xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
-    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
 
     <UserControl.Resources>
         <!-- EditSettings колонки не видят DataContext, поэтому список скважин берём через прокси. -->
@@ -16,6 +17,7 @@
     <dxg:GridControl
         ItemsSource="{Binding SelectedLine.LineHoles}"
         AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
         RestoreStateKeyFieldName="LineHoleId"
         RestoreStateOnSourceChange="True">
 

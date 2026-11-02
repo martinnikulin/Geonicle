@@ -1,14 +1,16 @@
-<UserControl
+﻿<UserControl
     x:Class="Geonicle.Wpf.Views.Grids.SurveysGrid"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
-    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
 
     <!-- DataContext наследуется от экрана (BoreholesViewModel). Колонки и настройки грида «Инклинометрия» описаны только здесь. -->
     <dxg:GridControl
         ItemsSource="{Binding SelectedBorehole.Surveys}"
         AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
         RestoreStateKeyFieldName="SurveyId"
         RestoreStateOnSourceChange="True">
 

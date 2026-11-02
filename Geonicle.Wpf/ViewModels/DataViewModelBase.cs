@@ -83,7 +83,14 @@ namespace Geonicle.Wpf.ViewModels
             }
         }
 
-        public Task SaveAsync() => SaveCoreAsync();
+        /// <summary>Данные успешно сохранены (гриды обновляют значения, например ID новых строк).</summary>
+        public event EventHandler? Saved;
+
+        public async Task SaveAsync()
+        {
+            await SaveCoreAsync();
+            Saved?.Invoke(this, EventArgs.Empty);
+        }
 
         /// <summary>
         /// Новое контекстное меню грида со стандартными пунктами (сейчас «Обновить»).

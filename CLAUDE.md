@@ -34,6 +34,7 @@
 
 `GridControl`:
 - `AutoGenerateColumns="None"` и явный список `GridControl.Columns` (первичный ключ-счётчик — `ReadOnly="True"`)
+- `behaviors:GridRefresh.RefreshOnSave="True"` — после сохранения грид перечитывает значения строк (ID новых строк появляется сразу; сущности об изменениях не уведомляют)
 - `RestoreStateKeyFieldName="<первичный ключ сущности>"` и `RestoreStateOnSourceChange="True"` — чтобы при обновлении текущая строка и прокрутка сохранялись
 - `TotalSummary` со счётчиком строк (`GridSummaryItem SummaryType="Count"`, `Alignment="Left"`)
 

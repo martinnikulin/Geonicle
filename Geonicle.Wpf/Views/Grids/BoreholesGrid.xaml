@@ -5,7 +5,8 @@
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
     xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
     xmlns:models="clr-namespace:Data.Models;assembly=Geonicle.Data"
-    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
 
     <!-- DataContext наследуется от экрана (BoreholesViewModel). Колонки и настройки грида «Скважины» описаны только здесь. -->
     <dxg:GridControl
@@ -13,6 +14,7 @@
         SelectedItem="{Binding SelectedBorehole, Mode=TwoWay}"
         ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
         AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
         RestoreStateKeyFieldName="BoreholeId"
         RestoreStateOnSourceChange="True">
 

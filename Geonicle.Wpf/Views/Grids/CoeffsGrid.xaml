@@ -1,11 +1,12 @@
-<UserControl
+﻿<UserControl
     x:Class="Geonicle.Wpf.Views.Grids.CoeffsGrid"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
     xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
     xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
-    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus">
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
 
     <UserControl.Resources>
         <!-- EditSettings колонок не видят DataContext, поэтому справочники берём через прокси. -->
@@ -16,6 +17,7 @@
     <dxg:GridControl
         ItemsSource="{Binding SelectedSeam.Coeffs}"
         AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
         RestoreStateKeyFieldName="CoeffId"
         RestoreStateOnSourceChange="True">
 
