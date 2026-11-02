@@ -89,21 +89,26 @@
                                          EditWidth="260"
                                          EditValue="{Binding Filters.SelectedLineId, Mode=TwoWay}">
                             <dxb:BarEditItem.EditSettings>
-                                <dxe:ComboBoxEditSettings
+                                <dxg:LookUpEditSettings
                                     ItemsSource="{Binding Data.Filters.Lines, Source={StaticResource ViewModelProxy}}"
                                     ValueMember="LineId"
-                                    DisplayMember="DisplayName"
+                                    DisplayMember="Description"
                                     IsTextEditable="False">
-                                    <dxe:ComboBoxEditSettings.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding LineId}" Width="50" />
-                                                <TextBlock Text="{Binding N, StringFormat={}{0:0.##}}" Width="50" />
-                                                <TextBlock Text="{Binding Description}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </dxe:ComboBoxEditSettings.ItemTemplate>
-                                </dxe:ComboBoxEditSettings>
+                                    <dxg:LookUpEditSettings.PopupContentTemplate>
+                                        <ControlTemplate>
+                                            <!-- Список приходит уже отсортированным по N; колонки: ID и название. -->
+                                            <dxg:GridControl x:Name="PART_GridControl" ShowBorder="False" AutoGenerateColumns="None">
+                                                <dxg:GridControl.Columns>
+                                                    <dxg:GridColumn FieldName="LineId" Header="ID" Width="70" />
+                                                    <dxg:GridColumn FieldName="Description" Header="Название" Width="200" />
+                                                </dxg:GridControl.Columns>
+                                                <dxg:GridControl.View>
+                                                    <dxg:TableView AutoWidth="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
+                                                </dxg:GridControl.View>
+                                            </dxg:GridControl>
+                                        </ControlTemplate>
+                                    </dxg:LookUpEditSettings.PopupContentTemplate>
+                                </dxg:LookUpEditSettings>
                             </dxb:BarEditItem.EditSettings>
                         </dxb:BarEditItem>
 
@@ -112,21 +117,26 @@
                                          EditWidth="260"
                                          EditValue="{Binding Filters.SelectedBoreholeId, Mode=TwoWay}">
                             <dxb:BarEditItem.EditSettings>
-                                <dxe:ComboBoxEditSettings
+                                <dxg:LookUpEditSettings
                                     ItemsSource="{Binding Data.Filters.Boreholes, Source={StaticResource ViewModelProxy}}"
                                     ValueMember="BoreholeId"
-                                    DisplayMember="DisplayName"
+                                    DisplayMember="HoleName"
                                     IsTextEditable="False">
-                                    <dxe:ComboBoxEditSettings.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding BoreholeId}" Width="60" />
-                                                <TextBlock Text="{Binding N, StringFormat={}{0:0.##}}" Width="50" />
-                                                <TextBlock Text="{Binding HoleName}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </dxe:ComboBoxEditSettings.ItemTemplate>
-                                </dxe:ComboBoxEditSettings>
+                                    <dxg:LookUpEditSettings.PopupContentTemplate>
+                                        <ControlTemplate>
+                                            <!-- Список приходит уже отсортированным по N; колонки: ID и название. -->
+                                            <dxg:GridControl x:Name="PART_GridControl" ShowBorder="False" AutoGenerateColumns="None">
+                                                <dxg:GridControl.Columns>
+                                                    <dxg:GridColumn FieldName="BoreholeId" Header="ID" Width="70" />
+                                                    <dxg:GridColumn FieldName="HoleName" Header="Название" Width="200" />
+                                                </dxg:GridControl.Columns>
+                                                <dxg:GridControl.View>
+                                                    <dxg:TableView AutoWidth="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
+                                                </dxg:GridControl.View>
+                                            </dxg:GridControl>
+                                        </ControlTemplate>
+                                    </dxg:LookUpEditSettings.PopupContentTemplate>
+                                </dxg:LookUpEditSettings>
                             </dxb:BarEditItem.EditSettings>
                         </dxb:BarEditItem>
 
