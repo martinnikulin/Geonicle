@@ -71,6 +71,11 @@
 - Проверка при сохранении: `EditableDataService.SaveAsync` вызывает `EntityValidation.Validate(context)` для добавленных и изменённых сущностей; при ошибках ничего не сохраняется, бросается `DataValidationException`, `MainViewModel` показывает список (до 10 ошибок, остальные счётчиком).
 - FluentValidation проверяет только объекты и ничего не знает о гриде. Связка с гридом (`ValidateRow`, проверка при уходе со строки) и проверка в импорте из Excel пока не сделаны; делаем по отдельному решению.
 
+## Лента (ribbon)
+- Группы ленты, которые зависят от экрана, объявляются так: флаг в `Ribbon/RibbonGroups.cs`; экран сообщает нужные группы через `IRibbonContext.VisibleRibbonGroups` (у `DataViewModelBase` по умолчанию `Data`, экраны с фильтрами переопределяют); `MainViewModel` отдаёт `Is<Группа>Visible`; в `MainWindow.xaml` у `RibbonPageGroup` `IsVisible="{Binding Is<Группа>Visible}"`. Группа «Данные» (сохранить, обновить, добавить, удалить) видна на всех экранах с гридами.
+- Фильтры на ленте (прослой, линия, скважина, «Все скважины»): `RibbonFilterViewModel` (доступна как `MainViewModel.Filters`) пишет выбор в общий `DataFilter` (одиночка в DI): экраны читают `InterbedId`, `LineId`, `BoreholeId`, `AllBoreholes` и подписываются на `Changed`. Выбор сохраняется при переключении экранов. Списки (`IFilterLookupService`) обновляются при переходе на экран, где они есть; сохраняется прежний выбор, если он остался в списке, иначе выбирается первый элемент; смена линии или «Все скважины» перезагружает скважины и выбирает первую.
+- Списки на ленте — `BarEditItem` с `ComboBoxEditSettings`; источник списка берётся через `helpers:BindingProxy` (`ViewModelProxy` в ресурсах окна).
+
 ## Тестирование
 - Тесты данных: проект `Geonicle.Data.Tests` (xUnit, простые `Assert`, база InMemory; net10.0, запускается и на Linux, и на Windows). Запуск: `dotnet test Geonicle.Data.Tests`. Перед каждым коммитом изменений в `Geonicle.Data` тесты должны проходить.
 - Автозапуск: GitHub Actions (`.github/workflows/tests.yml`) запускает `dotnet test Geonicle.Data.Tests` на Linux при каждом пуше в `master` и в pull request; результат на вкладке Actions репозитория. Красный запуск чиним сразу.

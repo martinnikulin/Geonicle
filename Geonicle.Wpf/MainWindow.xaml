@@ -1,4 +1,4 @@
-<dx:ThemedWindow
+﻿<dx:ThemedWindow
     x:Class="Geonicle.Wpf.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,12 +6,17 @@
     xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
     xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
     xmlns:dxa="http://schemas.devexpress.com/winfx/2008/xaml/accordion"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" 
     xmlns:vm="clr-namespace:Geonicle.Wpf.ViewModels"
     xmlns:views="clr-namespace:Geonicle.Wpf.Views"
     Title="MainWindow" Height="600" Width="1000">
     
     <dx:ThemedWindow.Resources>
+        <!-- EditSettings списков на ленте не видят DataContext, поэтому списки берём через прокси. -->
+        <helpers:BindingProxy x:Key="ViewModelProxy" Data="{Binding}" />
+
         <DataTemplate DataType="{x:Type vm:BoreholesViewModel}">
             <views:BoreholesView />
         </DataTemplate>
@@ -34,7 +39,7 @@
             RibbonStyle="Office2019" IsHiddenRibbonCollapsed="False" IsSimplified="False">
             <dxr:RibbonDefaultPageCategory>
                 <dxr:RibbonPage Caption="Данные">
-                    <dxr:RibbonPageGroup>
+                    <dxr:RibbonPageGroup IsVisible="{Binding IsDataGroupVisible}">
 
                         <dxb:BarButtonItem x:Name="saveItem" 
                                            Content="Сохранить" 
@@ -59,6 +64,75 @@
                                            LargeGlyph="{dx:DXImage Office2013/Reports/DeleteHeader_32x32.png}"
                                            Command="{x:Static dxg:GridCommands.DeleteFocusedRow}"
                                            />
+                    </dxr:RibbonPageGroup>
+
+                    <!-- Видна на экранах, где данные фильтруются по разделяющему прослою. -->
+                    <dxr:RibbonPageGroup Caption="Прослой" IsVisible="{Binding IsInterbedGroupVisible}">
+                        <dxb:BarEditItem x:Name="interbedItem"
+                                         Content="Разделяющий прослой"
+                                         EditWidth="220"
+                                         EditValue="{Binding Filters.SelectedInterbedId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxe:ComboBoxEditSettings
+                                    ItemsSource="{Binding Data.Filters.Interbeds, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="InterbedId"
+                                    DisplayMember="InterbedName"
+                                    IsTextEditable="False" />
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+                    </dxr:RibbonPageGroup>
+
+                    <!-- Видна только на экране «Данные по скважинам». -->
+                    <dxr:RibbonPageGroup Caption="Линия и скважина" IsVisible="{Binding IsLineBoreholeGroupVisible}">
+                        <dxb:BarEditItem x:Name="lineItem"
+                                         Content="Разведочная линия"
+                                         EditWidth="260"
+                                         EditValue="{Binding Filters.SelectedLineId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxe:ComboBoxEditSettings
+                                    ItemsSource="{Binding Data.Filters.Lines, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="LineId"
+                                    DisplayMember="DisplayName"
+                                    IsTextEditable="False">
+                                    <dxe:ComboBoxEditSettings.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding LineId}" Width="50" />
+                                                <TextBlock Text="{Binding N, StringFormat={}{0:0.##}}" Width="50" />
+                                                <TextBlock Text="{Binding Description}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </dxe:ComboBoxEditSettings.ItemTemplate>
+                                </dxe:ComboBoxEditSettings>
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+
+                        <dxb:BarEditItem x:Name="boreholeItem"
+                                         Content="Скважины"
+                                         EditWidth="260"
+                                         EditValue="{Binding Filters.SelectedBoreholeId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxe:ComboBoxEditSettings
+                                    ItemsSource="{Binding Data.Filters.Boreholes, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="BoreholeId"
+                                    DisplayMember="DisplayName"
+                                    IsTextEditable="False">
+                                    <dxe:ComboBoxEditSettings.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding BoreholeId}" Width="60" />
+                                                <TextBlock Text="{Binding N, StringFormat={}{0:0.##}}" Width="50" />
+                                                <TextBlock Text="{Binding HoleName}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </dxe:ComboBoxEditSettings.ItemTemplate>
+                                </dxe:ComboBoxEditSettings>
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+
+                        <dxb:BarCheckItem x:Name="allBoreholesItem"
+                                          Content="Все скважины"
+                                          IsChecked="{Binding Filters.AllBoreholes, Mode=TwoWay}" />
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>

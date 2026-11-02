@@ -1,6 +1,7 @@
 ﻿using DevExpress.Mvvm;
 using Geonicle.Validation;
 using Geonicle.Wpf.Interfaces;
+using Geonicle.Wpf.Ribbon;
 using Geonicle.Wpf.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -15,13 +16,17 @@ namespace Geonicle.Wpf.ViewModels
 
         private readonly IUserDialogs dialogs;
 
-        public MainViewModel(IServiceProvider services, IUserDialogs dialogs)
+        public MainViewModel(IServiceProvider services, IUserDialogs dialogs, RibbonFilterViewModel filters)
         {
             this.services = services;
             this.dialogs = dialogs;
+            Filters = filters;
             SaveCommand = new AsyncCommand(SaveAsync);
             RefreshCommand = new AsyncCommand(RefreshAsync);
         }
+
+        /// <summary>Фильтры на ленте (прослой, линия, скважина).</summary>
+        public RibbonFilterViewModel Filters { get; }
 
         public AsyncCommand SaveCommand { get; }
 
@@ -31,6 +36,23 @@ namespace Geonicle.Wpf.ViewModels
         {
             get => GetValue<object?>();
             private set => SetValue(value);
+        }
+
+        private RibbonGroups CurrentRibbonGroups =>
+            (CurrentViewModel as IRibbonContext)?.VisibleRibbonGroups ?? RibbonGroups.None;
+
+        /// <summary>Общая группа «Данные» видна на всех экранах с гридами.</summary>
+        public bool IsDataGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Data);
+
+        public bool IsInterbedGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Interbed);
+
+        public bool IsLineBoreholeGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.LineBorehole);
+
+        private void RaiseRibbonGroupsChanged()
+        {
+            RaisePropertyChanged(nameof(IsDataGroupVisible));
+            RaisePropertyChanged(nameof(IsInterbedGroupVisible));
+            RaisePropertyChanged(nameof(IsLineBoreholeGroupVisible));
         }
 
         /// <summary>
@@ -56,6 +78,9 @@ namespace Geonicle.Wpf.ViewModels
             var previous = CurrentViewModel;
             CurrentViewModel = services.GetRequiredService(viewModelType);
             (previous as IDisposable)?.Dispose();
+
+            RaiseRibbonGroupsChanged();
+            await Filters.RefreshAsync(CurrentRibbonGroups & (RibbonGroups.Interbed | RibbonGroups.LineBorehole));
             return true;
         }
 

@@ -1,5 +1,6 @@
 ﻿using Data.Models;
 using Geonicle.Infrastructure;
+using Geonicle.Wpf.Ribbon;
 using Geonicle.Wpf.Services;
 using Geonicle.Wpf.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,14 @@ namespace Geonicle.Wpf
         public static IServiceCollection AddGeonicleApp(this IServiceCollection collection, string connectionString)
         {
             collection.AddSingleton<IDbContextFactory<GDB52Context>>(new GDB52ContextFactory(connectionString));
+            collection.AddSingleton<IFilterLookupService, FilterLookupService>();
             collection.AddTransient<IBoreholesService, BoreholesService>();
             collection.AddTransient<ILinesService, LinesService>();
             collection.AddTransient<ISeamsService, SeamsService>();
 
             collection.AddSingleton<IUserDialogs, UserDialogs>();
+            collection.AddSingleton<DataFilter>();
+            collection.AddSingleton<RibbonFilterViewModel>();
             collection.AddSingleton<MainViewModel>();
             collection.AddTransient<BoreholesViewModel>();
             collection.AddTransient<LinesViewModel>();

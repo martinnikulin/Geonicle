@@ -1,6 +1,7 @@
 ﻿using DevExpress.Mvvm;
 using Geonicle.Wpf.Interfaces;
 using Geonicle.Wpf.Menus;
+using Geonicle.Wpf.Ribbon;
 using Geonicle.Wpf.Services;
 using System;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace Geonicle.Wpf.ViewModels
     /// Основа экрана с редактируемыми данными: загрузка, обновление, сохранение и признак несохранённых изменений.
     /// Наследник реализует только доступ к данным и объявляет контекстные меню своих гридов.
     /// </summary>
-    public abstract class DataViewModelBase : ViewModelBase, ISelectedViewModel, IDisposable
+    public abstract class DataViewModelBase : ViewModelBase, ISelectedViewModel, IRibbonContext, IDisposable
     {
         private readonly IUserDialogs dialogs;
 
@@ -24,6 +25,12 @@ namespace Geonicle.Wpf.ViewModels
         }
 
         public abstract string Title { get; }
+
+        /// <summary>
+        /// Какие группы ленты нужны экрану. По умолчанию только общая группа «Данные» (у всех экранов с гридами);
+        /// экраны с фильтрами переопределяют и добавляют RibbonGroups.Interbed и/или RibbonGroups.LineBorehole.
+        /// </summary>
+        public virtual RibbonGroups VisibleRibbonGroups => RibbonGroups.Data;
 
         /// <summary>Первая загрузка при открытии экрана (запускается из события Loaded).</summary>
         public AsyncCommand InitializeCommand { get; }

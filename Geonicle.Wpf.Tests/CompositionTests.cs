@@ -1,4 +1,5 @@
-using Geonicle.Infrastructure;
+﻿using Geonicle.Infrastructure;
+using Geonicle.Wpf.Ribbon;
 using Geonicle.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -15,6 +16,9 @@ public class CompositionTests
 
     [Theory]
     [InlineData(typeof(MainViewModel))]
+    [InlineData(typeof(RibbonFilterViewModel))]
+    [InlineData(typeof(DataFilter))]
+    [InlineData(typeof(IFilterLookupService))]
     [InlineData(typeof(BoreholesViewModel))]
     [InlineData(typeof(LinesViewModel))]
     [InlineData(typeof(SeamsViewModel))]

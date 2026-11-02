@@ -1,5 +1,6 @@
-using System.Windows;
+﻿using System.Windows;
 using Geonicle.Validation;
+using Geonicle.Wpf.Ribbon;
 using Geonicle.Wpf.Services;
 using Geonicle.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ namespace Geonicle.Wpf.Tests;
 public class MainViewModelTests
 {
     private readonly FakeDialogs dialogs = new();
+    private readonly FakeLookups lookups = FakeLookups.WithSampleData();
     private readonly MainViewModel main;
 
     public MainViewModelTests()
@@ -18,8 +20,11 @@ public class MainViewModelTests
             .AddSingleton<IUserDialogs>(dialogs)
             .AddTransient<TestScreen>()
             .AddTransient<OtherScreen>()
+            .AddTransient<InterbedScreen>()
+            .AddTransient<AllGroupsScreen>()
             .BuildServiceProvider();
-        main = new MainViewModel(provider, dialogs);
+        var filters = new RibbonFilterViewModel(lookups, new DataFilter(), dialogs);
+        main = new MainViewModel(provider, dialogs, filters);
     }
 
     /// <summary>Открывает первый экран, загружает его и (по желанию) помечает правки несохранёнными.</summary>
@@ -163,5 +168,84 @@ public class MainViewModelTests
         await main.RefreshAsync();
 
         Assert.Equal(2, screen.Loads);
+    }
+
+    // ---- группы ленты
+
+    [Fact]
+    public void No_group_is_visible_before_any_screen_is_opened()
+    {
+        Assert.False(main.IsDataGroupVisible);
+        Assert.False(main.IsInterbedGroupVisible);
+        Assert.False(main.IsLineBoreholeGroupVisible);
+    }
+
+    [Fact]
+    public async Task A_screen_with_grids_shows_only_the_Data_group()
+    {
+        await main.NavigateAsync(typeof(TestScreen));
+
+        Assert.True(main.IsDataGroupVisible);
+        Assert.False(main.IsInterbedGroupVisible);
+        Assert.False(main.IsLineBoreholeGroupVisible);
+    }
+
+    [Fact]
+    public async Task Groups_follow_the_open_screen()
+    {
+        await main.NavigateAsync(typeof(InterbedScreen));
+        Assert.True(main.IsDataGroupVisible && main.IsInterbedGroupVisible && !main.IsLineBoreholeGroupVisible);
+
+        await main.NavigateAsync(typeof(AllGroupsScreen));
+        Assert.True(main.IsDataGroupVisible && main.IsInterbedGroupVisible && main.IsLineBoreholeGroupVisible);
+
+        await main.NavigateAsync(typeof(TestScreen));
+        Assert.True(main.IsDataGroupVisible && !main.IsInterbedGroupVisible && !main.IsLineBoreholeGroupVisible);
+    }
+
+    [Fact]
+    public async Task Navigation_notifies_the_ribbon_about_group_changes()
+    {
+        var changed = new List<string>();
+        main.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        await main.NavigateAsync(typeof(AllGroupsScreen));
+
+        Assert.Contains(nameof(MainViewModel.IsDataGroupVisible), changed);
+        Assert.Contains(nameof(MainViewModel.IsInterbedGroupVisible), changed);
+        Assert.Contains(nameof(MainViewModel.IsLineBoreholeGroupVisible), changed);
+    }
+
+    [Fact]
+    public async Task Lists_are_refreshed_when_a_screen_that_uses_them_is_opened()
+    {
+        await main.NavigateAsync(typeof(InterbedScreen));
+        Assert.Equal(1, lookups.InterbedCalls);
+        Assert.Equal(0, lookups.LineCalls);
+
+        await main.NavigateAsync(typeof(AllGroupsScreen));
+        Assert.Equal(2, lookups.InterbedCalls);
+        Assert.Equal(1, lookups.LineCalls);
+        Assert.Equal(100, main.Filters.SelectedInterbedId);
+        Assert.Equal(10, main.Filters.SelectedLineId);
+    }
+
+    [Fact]
+    public async Task Screens_without_filters_do_not_load_the_lists()
+    {
+        await main.NavigateAsync(typeof(TestScreen));
+        await main.NavigateAsync(typeof(OtherScreen));
+
+        Assert.Equal(0, lookups.InterbedCalls);
+        Assert.Equal(0, lookups.LineCalls);
+        Assert.Empty(lookups.BoreholeCalls);
+    }
+
+    [Fact]
+    public void The_borehole_data_screen_needs_all_three_groups()
+    {
+        Assert.Equal(
+            RibbonGroups.Data | RibbonGroups.Interbed | RibbonGroups.LineBorehole,
+            new LithologyViewModel().VisibleRibbonGroups);
     }
 }
