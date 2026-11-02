@@ -5,6 +5,7 @@ using Xunit;
 namespace Geonicle.Data.Tests.Integration;
 
 /// <summary>Ограничения схемы, которые InMemory не проверяет. Работают через Db.SaveChanges, без проверки валидаторами.</summary>
+[Collection("SqlServer")]
 public class ConstraintTests : SqlServerTestBase
 {
     [SqlServerFact]

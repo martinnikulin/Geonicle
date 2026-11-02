@@ -5,6 +5,7 @@ using Xunit;
 namespace Geonicle.Data.Tests.Integration;
 
 /// <summary>Поведение, которое остаётся за БД: ключи identity, метки времени и триггеры, которые не переносились в код.</summary>
+[Collection("SqlServer")]
 public class DatabaseBehaviorTests : SqlServerTestBase
 {
     [SqlServerFact]

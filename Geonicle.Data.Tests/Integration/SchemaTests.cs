@@ -4,6 +4,7 @@ using Xunit;
 
 namespace Geonicle.Data.Tests.Integration;
 
+[Collection("SqlServer")]
 public class SchemaTests : SqlServerTestBase
 {
     [SqlServerFact]
