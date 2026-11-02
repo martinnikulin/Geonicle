@@ -2,4 +2,5 @@
   <Project Path="Geonicle.Data/Geonicle.Data.csproj" />
   <Project Path="Geonicle.Data.Tests/Geonicle.Data.Tests.csproj" />
   <Project Path="Geonicle.Wpf/Geonicle.Wpf.csproj" DefaultStartup="true" />
+  <Project Path="Geonicle.Wpf.Tests/Geonicle.Wpf.Tests.csproj" />
 </Solution>

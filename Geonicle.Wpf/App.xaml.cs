@@ -66,19 +66,7 @@ namespace Geonicle.Wpf
             var connectionString = configuration.GetConnectionString("GDB52")
                 ?? throw new InvalidOperationException("Не задана строка подключения ConnectionStrings:GDB52.");
 
-            var collection = new ServiceCollection();
-
-            collection.AddSingleton<IDbContextFactory<GDB52Context>>(new GDB52ContextFactory(connectionString));
-            collection.AddTransient<IBoreholesService, BoreholesService>();
-            collection.AddTransient<ILinesService, LinesService>();
-            collection.AddTransient<ISeamsService, SeamsService>();
-
-            collection.AddSingleton<IUserDialogs, UserDialogs>();
-            collection.AddSingleton<MainViewModel>();
-            collection.AddTransient<BoreholesViewModel>();
-            collection.AddTransient<LinesViewModel>();
-            collection.AddTransient<SeamsViewModel>();
-            collection.AddTransient<LithologyViewModel>();
+            var collection = new ServiceCollection().AddGeonicleApp(connectionString);
 
             return collection.BuildServiceProvider();
         }

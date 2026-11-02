@@ -1,0 +1,31 @@
+using Geonicle.Infrastructure;
+using Geonicle.Wpf.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+
+namespace Geonicle.Wpf.Tests;
+
+/// <summary>Сборка контейнера приложения: все экраны и сервисы создаются (против ошибок вроде «Multiple constructors»).</summary>
+public class CompositionTests
+{
+    private static ServiceProvider Build() =>
+        new ServiceCollection()
+            .AddGeonicleApp("Server=localhost;Database=GDB520001;Integrated Security=True;TrustServerCertificate=True")
+            .BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+    [Theory]
+    [InlineData(typeof(MainViewModel))]
+    [InlineData(typeof(BoreholesViewModel))]
+    [InlineData(typeof(LinesViewModel))]
+    [InlineData(typeof(SeamsViewModel))]
+    [InlineData(typeof(LithologyViewModel))]
+    [InlineData(typeof(IBoreholesService))]
+    [InlineData(typeof(ILinesService))]
+    [InlineData(typeof(ISeamsService))]
+    public void Registered_type_can_be_created(Type type)
+    {
+        using var provider = Build();
+
+        Assert.NotNull(provider.GetRequiredService(type));
+    }
+}

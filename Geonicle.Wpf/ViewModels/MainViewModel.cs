@@ -59,13 +59,15 @@ namespace Geonicle.Wpf.ViewModels
             return true;
         }
 
-        private async Task SaveAsync()
+        /// <summary>Сохраняет текущий экран; ошибки показывает пользователю (кнопка «Сохранить»).</summary>
+        public async Task SaveAsync()
         {
             if (CurrentViewModel is ISelectedViewModel viewModel)
                 await TrySaveAsync(viewModel);
         }
 
-        private async Task RefreshAsync()
+        /// <summary>Перечитывает данные текущего экрана (кнопка «Обновить»).</summary>
+        public async Task RefreshAsync()
         {
             if (CurrentViewModel is ISelectedViewModel viewModel)
                 await viewModel.RefreshAsync();
