@@ -1,4 +1,5 @@
 ﻿using DevExpress.Mvvm;
+using Geonicle.Validation;
 using Geonicle.Wpf.Interfaces;
 using Geonicle.Wpf.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,6 +77,15 @@ namespace Geonicle.Wpf.ViewModels
             {
                 await viewModel.SaveAsync();
                 return true;
+            }
+            catch (DataValidationException ex)
+            {
+                dialogs.Show(
+                    ex.ToUserMessage(),
+                    "Проверка данных",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return false;
             }
             catch (Exception ex)
             {

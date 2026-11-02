@@ -1,4 +1,5 @@
 ﻿using Data.Models;
+using Geonicle.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace Geonicle.Infrastructure
@@ -24,10 +25,20 @@ namespace Geonicle.Infrastructure
 
         public bool HasChanges => context?.ChangeTracker.HasChanges() ?? false;
 
+        /// <summary>
+        /// Проверяет добавленные и изменённые сущности (валидаторы из папки Validation) и сохраняет.
+        /// Если есть ошибки, в БД ничего не уходит: бросается DataValidationException со списком.
+        /// </summary>
         public async Task SaveAsync()
         {
-            if (context != null)
-                await context.SaveChangesAsync();
+            if (context == null)
+                return;
+
+            var errors = EntityValidation.Validate(context);
+            if (errors.Count > 0)
+                throw new DataValidationException(errors);
+
+            await context.SaveChangesAsync();
         }
 
         public void Dispose()

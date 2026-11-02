@@ -1,4 +1,4 @@
-using Data.Models;
+﻿using Data.Models;
 using FluentValidation;
 
 namespace Geonicle.Validation
@@ -7,7 +7,7 @@ namespace Geonicle.Validation
     /// Правила проверки скважины. Один класс на сущность, текст сообщений по-русски прямо в правилах.
     /// Ограничения совпадают со схемой БД (HoleName: not null, 50 символов).
     /// </summary>
-    public class BoreholeValidator : AbstractValidator<Borehole>
+    public class BoreholeValidator : RowValidator<Borehole>
     {
         public BoreholeValidator()
         {
@@ -18,5 +18,8 @@ namespace Geonicle.Validation
             RuleFor(b => b.Depth)
                 .GreaterThanOrEqualTo(0).WithMessage("Глубина скважины не может быть отрицательной.");
         }
+
+        public override string Describe(Borehole borehole) =>
+            string.IsNullOrWhiteSpace(borehole.HoleName) ? "Скважина (без названия)" : $"Скважина «{borehole.HoleName}»";
     }
 }
