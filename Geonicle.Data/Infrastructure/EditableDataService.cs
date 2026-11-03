@@ -1,4 +1,5 @@
 ﻿using Data.Models;
+using Geonicle.Infrastructure;
 using Geonicle.Validation;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,6 +46,17 @@ namespace Geonicle.Data.Services
         {
             context?.Dispose();
             context = null;
+        }
+
+        /// <summary>Справочник из таблицы Dictionary по разделу (Section) для списков в колонках; код — DictionaryId. Вызывать после загрузки данных.</summary>
+        protected async Task<IReadOnlyList<LookupItem>> GetDictionaryLookupAsync(string section)
+        {
+            return await Context.Dictionaries
+                .AsNoTracking()
+                .Where(d => d.Section == section)
+                .OrderBy(d => d.N)
+                .Select(d => new LookupItem(d.DictionaryId, d.Description))
+                .ToListAsync();
         }
 
         /// <summary>Освобождает прежний контекст (вместе с несохранёнными правками) и создаёт новый.</summary>

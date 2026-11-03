@@ -36,16 +36,6 @@ namespace Geonicle.Data.Services
         public Task<IReadOnlyList<LookupItem>> GetCoalTypeLookupAsync() => GetDictionaryLookupAsync("тип угля");
 
         public Task<IReadOnlyList<LookupItem>> GetCoalGradeLookupAsync() => GetDictionaryLookupAsync("марка");
-
-        private async Task<IReadOnlyList<LookupItem>> GetDictionaryLookupAsync(string section)
-        {
-            return await Context.Dictionaries
-                .AsNoTracking()
-                .Where(d => d.Section == section)
-                .OrderBy(d => d.N)
-                .Select(d => new LookupItem(d.DictionaryId, d.Description))
-                .ToListAsync();
-        }
     }
 
     public interface ISeamsService : IEditableDataService
