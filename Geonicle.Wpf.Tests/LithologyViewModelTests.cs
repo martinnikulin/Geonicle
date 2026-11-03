@@ -77,8 +77,14 @@ public class LithologyViewModelTests
     private static HoleData Data(params SeamDef[] seams) =>
         new(new ObservableCollection<SeamDef>(seams), new ObservableCollection<Lithology>());
 
+    // Глубины пластопересечения — вычисляемые, из слоёв-границ литологии.
     private static SeamDef Seam(int id, decimal from, decimal to) =>
-        new() { HoleSeamId = id, DepthFrom = from, DepthTo = to };
+        new()
+        {
+            HoleSeamId = id,
+            DepthFromNavigation = new Lithology { DepthFrom = from },
+            DepthToNavigation = new Lithology { DepthTo = to },
+        };
 
     [Fact]
     public async Task Loads_data_for_the_filter_borehole_and_interbed_with_lookups()

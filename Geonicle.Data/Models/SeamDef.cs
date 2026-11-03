@@ -12,10 +12,6 @@ public partial class SeamDef
 
     public int BoreholeId { get; set; }
 
-    public decimal? DepthFrom { get; set; }
-
-    public decimal? DepthTo { get; set; }
-
     public int SeamId { get; set; }
 
     public decimal? Dip { get; set; }

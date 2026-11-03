@@ -26,7 +26,9 @@ namespace Geonicle.Data.Services
                 .SingleOrDefaultAsync(b => b.BoreholeId == boreholeId);
             await context.SeamDefs
                 .Where(s => s.BoreholeId == boreholeId && s.InterbedId == interbedId)
-                .OrderBy(s => s.DepthFrom)
+                .Include(s => s.DepthFromNavigation)
+                .Include(s => s.DepthToNavigation)
+                .OrderBy(s => s.DepthFromNavigation.DepthFrom)
                 .LoadAsync();
 
             return new HoleData(

@@ -1132,8 +1132,6 @@ public partial class GDB52Context : DbContext
             entity.Property(e => e.DateModified)
                 .HasDefaultValueSql("(getdate())", "DF_HoleSeams_DateModified")
                 .HasColumnType("datetime");
-            entity.Property(e => e.DepthFrom).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.DepthTo).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Dip).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.DrawFrom).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.DrawTo).HasColumnType("decimal(18, 2)");

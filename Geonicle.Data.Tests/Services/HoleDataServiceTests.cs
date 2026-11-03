@@ -18,14 +18,18 @@ public class HoleDataServiceTests
         db.AddRange(seam, holeA, holeB);
         db.SaveChanges();
 
-        db.Lithologies.AddRange(
-            new Lithology { BoreholeId = holeA.BoreholeId, DepthFrom = 0, DepthTo = 10 },
-            new Lithology { BoreholeId = holeA.BoreholeId, DepthFrom = 10, DepthTo = 20 },
-            new Lithology { BoreholeId = holeB.BoreholeId, DepthFrom = 0, DepthTo = 10 });
+        var a1 = new Lithology { BoreholeId = holeA.BoreholeId, DepthFrom = 0, DepthTo = 10 };
+        var a2 = new Lithology { BoreholeId = holeA.BoreholeId, DepthFrom = 10, DepthTo = 20 };
+        var a3 = new Lithology { BoreholeId = holeA.BoreholeId, DepthFrom = 20, DepthTo = 30 };
+        var b1 = new Lithology { BoreholeId = holeB.BoreholeId, DepthFrom = 0, DepthTo = 10 };
+        db.Lithologies.AddRange(a1, a2, a3, b1);
+        db.SaveChanges();
+
+        // Глубины пластопересечения берутся из слоёв-границ: «От» — слой DepthFromId, «До» — слой DepthToId.
         db.SeamDefs.AddRange(
-            new SeamDef { BoreholeId = holeA.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFrom = 1, DepthTo = 2 },
-            new SeamDef { BoreholeId = holeA.BoreholeId, SeamId = seam.SeamId, InterbedId = 200, DepthFrom = 3, DepthTo = 4 },
-            new SeamDef { BoreholeId = holeB.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFrom = 5, DepthTo = 6 });
+            new SeamDef { BoreholeId = holeA.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = a2.LithologyId, DepthToId = a3.LithologyId },
+            new SeamDef { BoreholeId = holeA.BoreholeId, SeamId = seam.SeamId, InterbedId = 200, DepthFromId = a1.LithologyId, DepthToId = a1.LithologyId },
+            new SeamDef { BoreholeId = holeB.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = b1.LithologyId, DepthToId = b1.LithologyId });
         db.SaveChanges();
         return (testDb, holeA.BoreholeId, holeB.BoreholeId);
     }
@@ -44,13 +48,54 @@ public class HoleDataServiceTests
     }
 
     [Fact]
+    public async Task Seam_depths_come_from_the_boundary_lithology_layers()
+    {
+        var (testDb, holeA, _) = Seed();
+        var service = new HoleDataService(testDb);
+
+        var seam = Assert.Single((await service.LoadAsync(holeA, 100)).HoleSeams);
+
+        Assert.Equal(10, seam.DepthFrom);   // DepthFrom слоя DepthFromId
+        Assert.Equal(30, seam.DepthTo);     // DepthTo слоя DepthToId
+    }
+
+    [Fact]
+    public async Task Seams_are_ordered_by_depth()
+    {
+        var testDb = new TestDb();
+        using (var db = testDb.CreateDbContext())
+        {
+            var seam = new Seam { Description = "П", ShortName = "П" };
+            var hole = new Borehole { HoleName = "A" };
+            db.AddRange(seam, hole);
+            db.SaveChanges();
+            var upper = new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 0, DepthTo = 5 };
+            var lower = new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 50, DepthTo = 60 };
+            db.Lithologies.AddRange(upper, lower);
+            db.SaveChanges();
+            db.SeamDefs.AddRange(   // нижний пласт добавлен первым
+                new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = lower.LithologyId, DepthToId = lower.LithologyId },
+                new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = upper.LithologyId, DepthToId = upper.LithologyId });
+            db.SaveChanges();
+        }
+        var service = new HoleDataService(testDb);
+        int holeId;
+        using (var db = testDb.CreateDbContext())
+            holeId = db.Boreholes.Single().BoreholeId;
+
+        var seams = (await service.LoadAsync(holeId, 100)).HoleSeams;
+
+        Assert.Equal(new decimal?[] { 0, 50 }, seams.Select(s => s.DepthFrom));
+    }
+
+    [Fact]
     public async Task Lithology_is_the_whole_borehole_regardless_of_interbed()
     {
         var (testDb, holeA, holeB) = Seed();
         var service = new HoleDataService(testDb);
 
-        Assert.Equal(2, (await service.LoadAsync(holeA, 100)).Lithology.Count);
-        Assert.Equal(2, (await service.LoadAsync(holeA, 200)).Lithology.Count);
+        Assert.Equal(3, (await service.LoadAsync(holeA, 100)).Lithology.Count);
+        Assert.Equal(3, (await service.LoadAsync(holeA, 200)).Lithology.Count);
         Assert.Single((await service.LoadAsync(holeB, 100)).Lithology);
     }
 
@@ -118,11 +163,11 @@ public class HoleDataServiceTests
         var service = new HoleDataService(testDb);
         var data = await service.LoadAsync(holeA, 100);
 
-        data.Lithology.Add(new Lithology { DepthFrom = 20, DepthTo = 30 });   // BoreholeId не задан: подставляется коллекцией скважины
+        data.Lithology.Add(new Lithology { DepthFrom = 40, DepthTo = 50 });   // BoreholeId не задан: подставляется коллекцией скважины
         await service.SaveAsync();
 
         using var db = testDb.CreateDbContext();
-        Assert.Equal(holeA, db.Lithologies.Single(l => l.DepthFrom == 20).BoreholeId);
+        Assert.Equal(holeA, db.Lithologies.Single(l => l.DepthFrom == 40).BoreholeId);
     }
 
     [Fact]
