@@ -29,6 +29,11 @@ public sealed class FakeHoleData : IHoleDataService
     /// <summary>Если задан, выполняется внутри загрузки (для проверки смены фильтра во время загрузки).</summary>
     public Action<int?, int?> OnLoad { get; set; }
 
+    /// <summary>Если задан, выполняется при загрузке справочников (для проверки смены фильтра во время их загрузки).</summary>
+    public Action OnLookup { get; set; }
+
+    public int SeamNameUpdates { get; private set; }
+
     public bool HasChanges => Changed;
 
     public Task<HoleData> LoadAsync(int? boreholeId, int? interbedId)
@@ -50,8 +55,13 @@ public sealed class FakeHoleData : IHoleDataService
         return Task.CompletedTask;
     }
 
-    private static Task<IReadOnlyList<LookupItem>> Items(string name) =>
-        Task.FromResult<IReadOnlyList<LookupItem>>(new[] { new LookupItem(1, name) });
+    public void UpdateSeamNames() => SeamNameUpdates++;
+
+    private Task<IReadOnlyList<LookupItem>> Items(string name)
+    {
+        OnLookup?.Invoke();
+        return Task.FromResult<IReadOnlyList<LookupItem>>(new[] { new LookupItem(1, name) });
+    }
 
     public Task<IReadOnlyList<LookupItem>> GetSeamLookupAsync() => Items("пласт");
 
@@ -169,6 +179,42 @@ public class LithologyViewModelTests
 
         Assert.Equal(new (int?, int?)[] { (5, 100), (6, 100) }, service.LoadCalls);
         Assert.Equal(9, screen.SelectedHoleSeam.HoleSeamId);
+    }
+
+    [Fact]
+    public async Task Filter_changed_while_lookups_load_on_the_first_open_is_picked_up()
+    {
+        // Первое открытие экрана: лента выбирает скважину и прослой, пока грузятся справочники.
+        service.Data[(6, 100)] = Data(Seam(9, 1, 2));
+        var changed = false;
+        service.OnLookup = () =>
+        {
+            if (changed)
+                return;
+            changed = true;
+            filter.InterbedId = 100;
+            filter.BoreholeId = 6;
+        };
+        var screen = Screen();
+
+        await screen.LoadAsync();
+
+        Assert.Equal(9, screen.SelectedHoleSeam.HoleSeamId);
+        Assert.Equal((6, 100), service.LoadCalls.Last());
+    }
+
+    [Fact]
+    public async Task Seam_names_are_recalculated_after_saving()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        var screen = Screen();
+        await screen.LoadAsync();
+
+        await screen.SaveAsync();
+
+        Assert.Equal(1, service.Saves);
+        Assert.Equal(1, service.SeamNameUpdates);
     }
 
     [Fact]

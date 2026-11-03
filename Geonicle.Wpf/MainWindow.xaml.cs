@@ -12,6 +12,10 @@ namespace Geonicle.Wpf
         public MainWindow()
         {
             InitializeComponent();
+
+            // При запуске сразу открываем «Скважины»; выбор пункта запускает переход через AccordionControl_SelectedItemChanged
+            // (к этому моменту DataContext уже задан).
+            Loaded += (_, _) => menu.SelectedItem = boreholesItem;
         }
 
         private bool isRestoringSelection;

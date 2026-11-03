@@ -60,6 +60,36 @@ public class HoleDataServiceTests
     }
 
     [Fact]
+    public async Task Layers_get_the_name_of_the_seam_that_contains_them()
+    {
+        var (testDb, holeA, _) = Seed();
+        var service = new HoleDataService(testDb);
+
+        var data = await service.LoadAsync(holeA, 100);
+
+        // Пластопересечение прослоя 100 — от 10 до 30: слои 10–20 и 20–30 входят в него, слой 0–10 нет.
+        Assert.Null(data.Lithology.Single(l => l.DepthFrom == 0).SeamName);
+        Assert.Equal("Пласт 1", data.Lithology.Single(l => l.DepthFrom == 10).SeamName);
+        Assert.Equal("Пласт 1", data.Lithology.Single(l => l.DepthFrom == 20).SeamName);
+    }
+
+    [Fact]
+    public async Task Seam_names_follow_edited_depths_after_UpdateSeamNames()
+    {
+        var (testDb, holeA, _) = Seed();
+        var service = new HoleDataService(testDb);
+        var data = await service.LoadAsync(holeA, 100);
+        var layer = data.Lithology.Single(l => l.DepthFrom == 0);
+        Assert.Null(layer.SeamName);
+
+        layer.DepthFrom = 10;   // слой теперь внутри 10–30 (глубины пласта не меняются)
+        layer.DepthTo = 15;
+        service.UpdateSeamNames();
+
+        Assert.Equal("Пласт 1", layer.SeamName);
+    }
+
+    [Fact]
     public async Task Seams_are_ordered_by_depth()
     {
         var testDb = new TestDb();

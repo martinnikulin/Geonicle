@@ -8,6 +8,8 @@ namespace Geonicle.Data.Services
     /// <summary>Данные экрана «Данные по скважинам»: пластопересечения и литология выбранной скважины.</summary>
     public class HoleDataService : EditableDataService, IHoleDataService
     {
+        private HoleData? currentData;
+
         public HoleDataService(IDbContextFactory<GDB52Context> contextFactory)
             : base(contextFactory)
         {
@@ -16,6 +18,7 @@ namespace Geonicle.Data.Services
         public async Task<HoleData> LoadAsync(int? boreholeId, int? interbedId)
         {
             var context = await ResetContextAsync();
+            currentData = null;
             if (boreholeId == null || interbedId == null)
                 return new HoleData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>());
 
@@ -28,12 +31,35 @@ namespace Geonicle.Data.Services
                 .Where(s => s.BoreholeId == boreholeId && s.InterbedId == interbedId)
                 .Include(s => s.DepthFromNavigation)
                 .Include(s => s.DepthToNavigation)
+                .Include(s => s.Seam)
                 .OrderBy(s => s.DepthFromNavigation.DepthFrom)
                 .LoadAsync();
 
-            return new HoleData(
+            var data = new HoleData(
                 context.SeamDefs.Local.ToObservableCollection(),
                 borehole == null ? new ObservableCollection<Lithology>() : (ObservableCollection<Lithology>)borehole.Lithologies);
+            AssignSeamNames(data.HoleSeams, data.Lithology);
+            currentData = data;
+            return data;
+        }
+
+        /// <summary>Пересчитывает колонку «Пласт» у слоёв литологии (после сохранения глубины могли измениться).</summary>
+        public void UpdateSeamNames()
+        {
+            if (currentData != null)
+                AssignSeamNames(currentData.HoleSeams, currentData.Lithology);
+        }
+
+        /// <summary>Слой входит в пластопересечение, если лежит между его глубинами «От» и «До»; вне пластов название пустое.</summary>
+        private static void AssignSeamNames(IEnumerable<SeamDef> seams, IEnumerable<Lithology> layers)
+        {
+            var list = seams.Where(s => s.DepthFrom != null && s.DepthTo != null).ToList();
+            foreach (var layer in layers)
+            {
+                layer.SeamName = list
+                    .FirstOrDefault(s => s.DepthFrom <= layer.DepthFrom && layer.DepthTo <= s.DepthTo)
+                    ?.Seam?.Description;
+            }
         }
 
         public async Task<IReadOnlyList<LookupItem>> GetSeamLookupAsync()
@@ -68,6 +94,9 @@ namespace Geonicle.Data.Services
     {
         /// <summary>Загружает данные скважины; если скважина или прослой не выбраны, возвращает пустые списки.</summary>
         Task<HoleData> LoadAsync(int? boreholeId, int? interbedId);
+
+        /// <summary>Пересчитать колонку «Пласт» у слоёв литологии (вызывается после сохранения).</summary>
+        void UpdateSeamNames();
 
         // Справочники для колонок; вызывать после LoadAsync.
         Task<IReadOnlyList<LookupItem>> GetSeamLookupAsync();

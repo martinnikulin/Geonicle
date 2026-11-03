@@ -160,11 +160,12 @@
         </dxr:RibbonStatusBarControl>
         
         <dxa:AccordionControl 
+            x:Name="menu"
             DockPanel.Dock="Left" 
             SelectedItemChanged="AccordionControl_SelectedItemChanged">
             
             <dxa:AccordionItem Header="Первичные данные" IsExpanded="True">
-                <dxa:AccordionItem Header="Скважины" Tag="{x:Type vm:BoreholesViewModel}" />
+                <dxa:AccordionItem x:Name="boreholesItem" Header="Скважины" Tag="{x:Type vm:BoreholesViewModel}" />
                 <dxa:AccordionItem Header="Разведочные линии" Tag="{x:Type vm:LinesViewModel}" />
                 <dxa:AccordionItem Header="Пласты" Tag="{x:Type vm:SeamsViewModel}" />
                 <dxa:AccordionItem Header="Данные по скважинам" Tag="{x:Type vm:LithologyViewModel}" />

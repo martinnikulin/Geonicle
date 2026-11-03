@@ -44,6 +44,7 @@
                         IsTextEditable="False" />
                 </dxg:GridColumn.EditSettings>
             </dxg:GridColumn>
+            <dxg:GridColumn FieldName="SeamName" Header="Пласт" ReadOnly="True" />
             <dxg:GridColumn FieldName="Formation" Header="Свита">
                 <dxg:GridColumn.EditSettings>
                     <dxe:ComboBoxEditSettings

@@ -146,18 +146,19 @@ namespace Geonicle.Wpf.ViewModels
                     SelectedHoleSeam = data.HoleSeams.FirstOrDefault(s => s.HoleSeamId == previousSeamId)
                         ?? data.HoleSeams.FirstOrDefault();
                     loadedKey = key;
+
+                    // Справочники грузятся внутри цикла: пока идёт их запрос, лента может выбрать другую скважину.
+                    if (!lookupsLoaded)
+                    {
+                        SeamLookup = await dataService.GetSeamLookupAsync();
+                        CoalGradeLookup = await dataService.GetCoalGradeLookupAsync();
+                        CoalTypeLookup = await dataService.GetCoalTypeLookupAsync();
+                        FormationLookup = await dataService.GetFormationLookupAsync();
+                        RockLookup = await dataService.GetRockLookupAsync();
+                        lookupsLoaded = true;
+                    }
                 }
                 while (key != CurrentKey);
-
-                if (!lookupsLoaded)
-                {
-                    SeamLookup = await dataService.GetSeamLookupAsync();
-                    CoalGradeLookup = await dataService.GetCoalGradeLookupAsync();
-                    CoalTypeLookup = await dataService.GetCoalTypeLookupAsync();
-                    FormationLookup = await dataService.GetFormationLookupAsync();
-                    RockLookup = await dataService.GetRockLookupAsync();
-                    lookupsLoaded = true;
-                }
             }
             finally
             {
@@ -165,7 +166,11 @@ namespace Geonicle.Wpf.ViewModels
             }
         }
 
-        protected override Task SaveCoreAsync() => dataService.SaveAsync();
+        protected override async Task SaveCoreAsync()
+        {
+            await dataService.SaveAsync();
+            dataService.UpdateSeamNames();   // колонка «Пласт» зависит от глубин, которые могли измениться
+        }
 
         protected override bool HasPendingChanges() => dataService.HasChanges;
 
