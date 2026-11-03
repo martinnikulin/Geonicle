@@ -57,6 +57,20 @@ public sealed class FakeHoleData : IHoleDataService
 
     public void UpdateSeamNames() => SeamNameUpdates++;
 
+    public List<(int? HoleSeamId, bool BySeam)> SampleViewCalls { get; } = new();
+
+    public int SampleRefreshes { get; private set; }
+
+    public void UpdateSampleView(int? holeSeamId, bool bySeam) => SampleViewCalls.Add((holeSeamId, bySeam));
+
+    public Task RefreshSamplesAsync()
+    {
+        SampleRefreshes++;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<LookupItem>> GetAdIndexLookupAsync() => Items("притято по");
+
     public List<IReadOnlyList<Lithology>> Added { get; } = new();
 
     public List<(SeamDef Seam, IReadOnlyList<Lithology> Layers)> Redefined { get; } = new();
@@ -489,6 +503,116 @@ public class LithologyViewModelTests
         Assert.Equal("Нет пласта без названия.", shown.Text);
         Assert.Equal(MessageBoxImage.Warning, shown.Icon);
         Assert.Equal(0, refreshes);
+    }
+
+    [Fact]
+    public async Task Samples_and_the_ad_index_lookup_are_loaded_with_the_screen()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        var samples = new ObservableCollection<SampleRow> { new(new SampleDef { Nsample = "A" }) };
+        service.Data[(5, 100)] = new HoleData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>(), samples);
+        var screen = Screen();
+
+        await screen.LoadAsync();
+
+        Assert.Same(samples, screen.Samples);
+        Assert.Equal("притято по", screen.AdIndexLookup.Single().Name);
+        Assert.Equal("Обновить", Assert.Single(screen.SamplesMenu.Items).Caption);   // меню грида проб: только «Обновить»
+    }
+
+    [Fact]
+    public async Task Samples_follow_the_selected_seam_and_the_by_seam_mode()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12), Seam(2, 20, 22));
+        var screen = Screen();
+        await screen.LoadAsync();
+        service.SampleViewCalls.Clear();
+
+        screen.SelectedHoleSeam = screen.HoleSeams[1];
+        screen.ShowByHoleSeam = true;
+
+        Assert.Equal(new (int?, bool)[] { (2, false), (2, true) }, service.SampleViewCalls);
+    }
+
+    [Fact]
+    public async Task Samples_are_attached_to_the_first_seam_after_loading()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12));
+        var screen = Screen();
+
+        await screen.LoadAsync();
+
+        Assert.Contains((1, false), service.SampleViewCalls.Select(c => (c.HoleSeamId ?? 0, c.BySeam)));
+    }
+
+    [Fact]
+    public async Task Samples_filter_is_off_for_the_whole_borehole_and_by_link_in_seam_mode()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12));
+        var screen = Screen();
+        await screen.LoadAsync();
+        Assert.Null(screen.SamplesFilterCriteria);
+
+        screen.ShowByHoleSeam = true;
+        Assert.Contains("HasSeamLink", screen.SamplesFilterCriteria.ToString());
+
+        screen.ShowByHoleSeam = false;
+        Assert.Null(screen.SamplesFilterCriteria);
+    }
+
+    [Fact]
+    public async Task Samples_filter_shows_nothing_in_seam_mode_when_there_is_no_seam()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        var screen = Screen();
+        await screen.LoadAsync();
+
+        screen.ShowByHoleSeam = true;
+
+        Assert.Contains("SampleId", screen.SamplesFilterCriteria.ToString());
+    }
+
+    [Fact]
+    public async Task Accepted_is_editable_and_samples_cannot_be_added_only_in_the_matching_modes()
+    {
+        var screen = Screen();
+        await screen.LoadAsync();
+        var raised = new List<string>();
+        screen.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        Assert.True(screen.AcceptedReadOnly);          // вся скважина: «Принято» только для чтения
+        Assert.True(screen.CanAddOrDeleteSamples);     // добавлять и удалять пробы можно
+
+        screen.ShowByHoleSeam = true;
+
+        Assert.False(screen.AcceptedReadOnly);
+        Assert.False(screen.CanAddOrDeleteSamples);
+        Assert.Contains(nameof(LithologyViewModel.AcceptedReadOnly), raised);
+        Assert.Contains(nameof(LithologyViewModel.CanAddOrDeleteSamples), raised);
+    }
+
+    [Fact]
+    public async Task Saving_refreshes_the_sample_links_and_renumbers()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12));
+        var screen = Screen();
+        await screen.LoadAsync();
+        service.SampleViewCalls.Clear();
+
+        await screen.SaveAsync();
+
+        Assert.Equal(1, service.SampleRefreshes);
+        Assert.Single(service.SampleViewCalls);
     }
 
     [Fact]

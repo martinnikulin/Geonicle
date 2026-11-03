@@ -40,6 +40,7 @@ namespace Geonicle.Wpf.ViewModels
             AddHoleSeamCommand = new AsyncCommand(AddHoleSeamAsync, () => CanAddHoleSeam);
             RedefineHoleSeamCommand = new AsyncCommand(RedefineHoleSeamAsync, () => CanRedefineHoleSeam);
             HoleSeamsMenu = CreateGridMenu();
+            SamplesMenu = CreateGridMenu();
             LithologyMenu = CreateGridMenu()
                 .Add("Добавить пластопересечение", AddHoleSeamCommand)
                 .Add("Переопределить пластопересечение", RedefineHoleSeamCommand);
@@ -60,6 +61,8 @@ namespace Geonicle.Wpf.ViewModels
         public GridMenu HoleSeamsMenu { get; }
 
         public GridMenu LithologyMenu { get; }
+
+        public GridMenu SamplesMenu { get; }
 
         /// <summary>Добавить пластопересечение по выбранным строкам литологии (пункт меню грида литологии).</summary>
         public AsyncCommand AddHoleSeamCommand { get; }
@@ -94,6 +97,13 @@ namespace Geonicle.Wpf.ViewModels
             private set => SetValue(value);
         }
 
+        /// <summary>Пробы скважины (грид «Пробы» на вкладке «Анализы»).</summary>
+        public ObservableCollection<SampleRow>? Samples
+        {
+            get => GetValue<ObservableCollection<SampleRow>?>();
+            private set => SetValue(value);
+        }
+
         public SeamDef? SelectedHoleSeam
         {
             get => GetValue<SeamDef?>();
@@ -101,6 +111,7 @@ namespace Geonicle.Wpf.ViewModels
             {
                 SetValue(value);
                 UpdateLithologyFilter();
+                UpdateSampleView();
                 RaiseSeamCommandsChanged();
             }
         }
@@ -113,8 +124,24 @@ namespace Geonicle.Wpf.ViewModels
             {
                 SetValue(value);
                 UpdateLithologyFilter();
+                UpdateSampleView();
                 RaiseSeamCommandsChanged();
+                RaisePropertyChanged(nameof(AcceptedReadOnly));
+                RaisePropertyChanged(nameof(CanAddOrDeleteSamples));
             }
+        }
+
+        /// <summary>«Принято» (HSSamps.Accepted) правится только в режиме пластопересечения; иначе колонка только для чтения.</summary>
+        public bool AcceptedReadOnly => !ShowByHoleSeam;
+
+        /// <summary>Пробы добавляются и удаляются только в режиме всей скважины (в режиме пластопересечения кнопки недоступны).</summary>
+        public bool CanAddOrDeleteSamples => !ShowByHoleSeam;
+
+        /// <summary>Условие для грида проб: null — все пробы скважины, иначе только пробы выбранного пластопересечения.</summary>
+        public CriteriaOperator? SamplesFilterCriteria
+        {
+            get => GetValue<CriteriaOperator?>();
+            private set => SetValue(value);
         }
 
         /// <summary>Условие для грида литологии: null — все слои скважины.</summary>
@@ -148,6 +175,13 @@ namespace Geonicle.Wpf.ViewModels
             private set => SetValue(value);
         }
 
+        /// <summary>Список «Притято по» (код — Dictionary.N, раздел «Ad»).</summary>
+        public IReadOnlyList<LookupItem>? AdIndexLookup
+        {
+            get => GetValue<IReadOnlyList<LookupItem>?>();
+            private set => SetValue(value);
+        }
+
         public IReadOnlyList<LookupItem>? RockLookup
         {
             get => GetValue<IReadOnlyList<LookupItem>?>();
@@ -168,6 +202,7 @@ namespace Geonicle.Wpf.ViewModels
                     var data = await dataService.LoadAsync(key.BoreholeId, key.InterbedId);
                     HoleSeams = data.HoleSeams;
                     Lithology = data.Lithology;
+                    Samples = data.Samples;
                     SelectedHoleSeam = data.HoleSeams.FirstOrDefault(s => s.HoleSeamId == previousSeamId)
                         ?? data.HoleSeams.FirstOrDefault();
                     loadedKey = key;
@@ -180,6 +215,7 @@ namespace Geonicle.Wpf.ViewModels
                         CoalTypeLookup = await dataService.GetCoalTypeLookupAsync();
                         FormationLookup = await dataService.GetFormationLookupAsync();
                         RockLookup = await dataService.GetRockLookupAsync();
+                        AdIndexLookup = await dataService.GetAdIndexLookupAsync();
                         lookupsLoaded = true;
                     }
                 }
@@ -195,6 +231,8 @@ namespace Geonicle.Wpf.ViewModels
         {
             await dataService.SaveAsync();
             dataService.UpdateSeamNames();   // колонка «Пласт» зависит от глубин, которые могли измениться
+            await dataService.RefreshSamplesAsync();   // триггеры БД меняют связи проб, значения Ad берутся из представления
+            UpdateSampleView();
         }
 
         protected override bool HasPendingChanges() => dataService.HasChanges;
@@ -248,6 +286,18 @@ namespace Geonicle.Wpf.ViewModels
         }
 
         private (int? BoreholeId, int? InterbedId) CurrentKey => (filter.BoreholeId, filter.InterbedId);
+
+        /// <summary>Привязывает пробы к выбранному пластопересечению, нумерует их и задаёт условие показа проб.</summary>
+        private void UpdateSampleView()
+        {
+            dataService.UpdateSampleView(SelectedHoleSeam?.HoleSeamId, ShowByHoleSeam);
+
+            SamplesFilterCriteria = !ShowByHoleSeam
+                ? null
+                : SelectedHoleSeam != null
+                    ? new BinaryOperator("HasSeamLink", true)
+                    : new BinaryOperator("SampleId", -1);   // пластопересечения нет: проб не показываем
+        }
 
         private void UpdateLithologyFilter()
         {

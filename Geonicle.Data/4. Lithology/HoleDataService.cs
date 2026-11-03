@@ -2,6 +2,7 @@ using Data.Models;
 using Geonicle.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace Geonicle.Data.Services
 {
@@ -11,6 +12,7 @@ namespace Geonicle.Data.Services
         private HoleData? currentData;
         private Borehole? currentBorehole;
         private int? currentInterbedId;
+        private bool allowSampleChanges = true;
 
         /// <summary>Код «пласта без названия», к которому привязываются новые пластопересечения (по умолчанию 0; менять только в тестах).</summary>
         public int NoNameSeamId { get; init; } = Geonicle.Validation.SeamValidator.NoNameSeamId;
@@ -43,9 +45,12 @@ namespace Geonicle.Data.Services
                 .LoadAsync();
 
             currentBorehole = borehole;
+            var samples = await LoadSamplesAsync(context, boreholeId.Value);
+
             var data = new HoleData(
                 context.SeamDefs.Local.ToObservableCollection(),
-                borehole == null ? new ObservableCollection<Lithology>() : (ObservableCollection<Lithology>)borehole.Lithologies);
+                borehole == null ? new ObservableCollection<Lithology>() : (ObservableCollection<Lithology>)borehole.Lithologies,
+                samples);
             AssignSeamNames(data.HoleSeams, data.Lithology);
             currentData = data;
             return data;
@@ -113,6 +118,99 @@ namespace Geonicle.Data.Services
                 AssignSeamNames(currentData.HoleSeams, currentData.Lithology);
         }
 
+        /// <summary>
+        /// Пробы скважины: SampleDef (правится) со связями HSSamps плюс значения Ad из представления Samples (только чтение).
+        /// Добавление и удаление строк в списке переносится в контекст (как для скважин и их замеров).
+        /// </summary>
+        private async Task<ObservableCollection<SampleRow>> LoadSamplesAsync(GDB52Context context, int boreholeId)
+        {
+            var defs = await context.SampleDefs
+                .Where(s => s.BoreholeId == boreholeId)
+                .Include(s => s.Hssamps)
+                .OrderBy(s => s.DepthFrom)
+                .ToListAsync();
+            var values = (await context.Samples.AsNoTracking().Where(v => v.BoreholeId == boreholeId).ToListAsync())
+                .ToDictionary(v => v.SampleId);
+
+            var rows = new ObservableCollection<SampleRow>();
+            foreach (var def in defs)
+            {
+                var row = new SampleRow(def);
+                row.SetValues(values.GetValueOrDefault(def.SampleId));
+                rows.Add(row);
+            }
+            rows.CollectionChanged += Samples_CollectionChanged;
+            return rows;
+        }
+
+        private void Samples_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            // В режиме пластопересечения пробы добавлять и удалять нельзя (как в Delphi): такая строка в базу не попадёт.
+            if (!allowSampleChanges || currentBorehole == null)
+                return;
+
+            foreach (SampleRow row in e.NewItems ?? Array.Empty<SampleRow>())
+            {
+                row.Def.BoreholeId = currentBorehole.BoreholeId;
+                Context.SampleDefs.Add(row.Def);
+            }
+            foreach (SampleRow row in e.OldItems ?? Array.Empty<SampleRow>())
+                Context.SampleDefs.Remove(row.Def);
+        }
+
+        public void UpdateSampleView(int? holeSeamId, bool bySeam)
+        {
+            allowSampleChanges = !bySeam;
+            if (currentData == null)
+                return;
+
+            foreach (var row in currentData.Samples)
+                row.SetSeam(holeSeamId);
+
+            // Нумерация идёт по глубине среди показанных проб: в режиме пластопересечения — только его пробы.
+            var shown = currentData.Samples.Where(r => !bySeam || r.HasSeamLink).OrderBy(r => r.DepthFrom).ToList();
+            foreach (var row in currentData.Samples)
+                row.SetN(0);
+            for (var i = 0; i < shown.Count; i++)
+                shown[i].SetN(i + 1);
+        }
+
+        /// <summary>
+        /// После сохранения БД могла изменить связи проб с пластопересечениями (триггеры) и значения Ad:
+        /// перечитывает их и присваивает ключи новым пробам.
+        /// </summary>
+        public async Task RefreshSamplesAsync()
+        {
+            if (currentData == null)
+                return;
+
+            var context = Context;
+            var ids = currentData.Samples.Select(r => r.SampleId).Where(id => id != 0).ToList();
+
+            var existing = (await context.Hssamps.AsNoTracking().Where(h => ids.Contains(h.SampleId))
+                    .Select(h => new { h.HoleSeamId, h.SampleId }).ToListAsync())
+                .Select(h => (h.HoleSeamId, h.SampleId)).ToHashSet();
+            foreach (var entry in context.ChangeTracker.Entries<Hssamp>().ToList())
+            {
+                var link = entry.Entity;
+                if (existing.Contains((link.HoleSeamId, link.SampleId)))
+                {
+                    await entry.ReloadAsync();
+                }
+                else
+                {
+                    entry.State = EntityState.Detached;
+                    link.Sample?.Hssamps.Remove(link);
+                }
+            }
+            await context.Hssamps.Where(h => ids.Contains(h.SampleId)).LoadAsync();   // связи, добавленные триггером
+
+            var values = (await context.Samples.AsNoTracking().Where(v => ids.Contains(v.SampleId)).ToListAsync())
+                .ToDictionary(v => v.SampleId);
+            foreach (var row in currentData.Samples)
+                row.SetValues(values.GetValueOrDefault(row.SampleId));
+        }
+
         /// <summary>Слой входит в пластопересечение, если лежит между его глубинами «От» и «До»; вне пластов название пустое.</summary>
         private static void AssignSeamNames(IEnumerable<SeamDef> seams, IEnumerable<Lithology> layers)
         {
@@ -140,6 +238,9 @@ namespace Geonicle.Data.Services
 
         public Task<IReadOnlyList<LookupItem>> GetFormationLookupAsync() => GetDictionaryLookupAsync("свита");
 
+        /// <summary>Какой анализ принимается: в AdIndex хранится номер записи (Dictionary.N), а не её код.</summary>
+        public Task<IReadOnlyList<LookupItem>> GetAdIndexLookupAsync() => GetDictionaryLookupAsync("Ad", codeIsN: true);
+
         public async Task<IReadOnlyList<LookupItem>> GetRockLookupAsync()
         {
             return await Context.Rocks
@@ -150,8 +251,17 @@ namespace Geonicle.Data.Services
         }
     }
 
-    /// <summary>Загруженные данные скважины. Пластопересечения — только выбранного прослоя, литология — вся скважина.</summary>
-    public record HoleData(ObservableCollection<SeamDef> HoleSeams, ObservableCollection<Lithology> Lithology);
+    /// <summary>Загруженные данные скважины. Пластопересечения — только выбранного прослоя, литология и пробы — вся скважина.</summary>
+    public record HoleData(
+        ObservableCollection<SeamDef> HoleSeams,
+        ObservableCollection<Lithology> Lithology,
+        ObservableCollection<SampleRow> Samples)
+    {
+        public HoleData(ObservableCollection<SeamDef> holeSeams, ObservableCollection<Lithology> lithology)
+            : this(holeSeams, lithology, new ObservableCollection<SampleRow>())
+        {
+        }
+    }
 
     public interface IHoleDataService : IEditableDataService
     {
@@ -170,6 +280,15 @@ namespace Geonicle.Data.Services
         /// <summary>Пересчитать колонку «Пласт» у слоёв литологии (вызывается после сохранения).</summary>
         void UpdateSeamNames();
 
+        /// <summary>
+        /// Привязывает пробы к выбранному пластопересечению (колонка «Принято»), нумерует показанные пробы по глубине
+        /// и разрешает или запрещает добавлять и удалять пробы (в режиме пластопересечения нельзя).
+        /// </summary>
+        void UpdateSampleView(int? holeSeamId, bool bySeam);
+
+        /// <summary>Перечитать связи проб и значения Ad после сохранения (триггеры БД меняют связи).</summary>
+        Task RefreshSamplesAsync();
+
         // Справочники для колонок; вызывать после LoadAsync.
         Task<IReadOnlyList<LookupItem>> GetSeamLookupAsync();
 
@@ -180,5 +299,7 @@ namespace Geonicle.Data.Services
         Task<IReadOnlyList<LookupItem>> GetFormationLookupAsync();
 
         Task<IReadOnlyList<LookupItem>> GetRockLookupAsync();
+
+        Task<IReadOnlyList<LookupItem>> GetAdIndexLookupAsync();
     }
 }

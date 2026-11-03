@@ -40,8 +40,10 @@
                 <dx:DXTabItem Header="Литология">
                     <grids:LithologyGrid />
                 </dx:DXTabItem>
-                <!-- Грид анализов добавим после описания колонок. -->
-                <dx:DXTabItem Header="Анализы" />
+                <!-- Грид проб на всю вкладку; грид анализов (AssaysGrid) будет появляться на его месте по двойному щелчку на пробе. -->
+                <dx:DXTabItem Header="Анализы">
+                    <grids:SamplesGrid />
+                </dx:DXTabItem>
             </dx:DXTabControl>
         </dxlc:LayoutGroup>
     </dxlc:LayoutControl>

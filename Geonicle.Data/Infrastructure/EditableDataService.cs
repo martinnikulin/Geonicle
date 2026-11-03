@@ -48,14 +48,17 @@ namespace Geonicle.Data.Services
             context = null;
         }
 
-        /// <summary>Справочник из таблицы Dictionary по разделу (Section) для списков в колонках; код — DictionaryId. Вызывать после загрузки данных.</summary>
-        protected async Task<IReadOnlyList<LookupItem>> GetDictionaryLookupAsync(string section)
+        /// <summary>
+        /// Справочник из таблицы Dictionary по разделу (Section) для списков в колонках. Код — DictionaryId,
+        /// а если в поле хранится номер записи (например, AdIndex), — N (<paramref name="codeIsN"/>). Вызывать после загрузки данных.
+        /// </summary>
+        protected async Task<IReadOnlyList<LookupItem>> GetDictionaryLookupAsync(string section, bool codeIsN = false)
         {
             return await Context.Dictionaries
                 .AsNoTracking()
                 .Where(d => d.Section == section)
                 .OrderBy(d => d.N)
-                .Select(d => new LookupItem(d.DictionaryId, d.Description))
+                .Select(d => new LookupItem(codeIsN ? d.N : d.DictionaryId, d.Description))
                 .ToListAsync();
         }
 

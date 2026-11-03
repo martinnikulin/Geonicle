@@ -482,3 +482,247 @@ public class HoleSeamEditingTests
 
     private static GDB52Context testDbContext(Setup setup) => setup.Db.CreateDbContext();
 }
+
+/// <summary>Грид «Пробы»: загрузка, связь с пластопересечением, правки, добавление и удаление, нумерация.</summary>
+public class SampleRowsTests
+{
+    private sealed record Setup(TestDb Db, int Hole, int SeamA, int SeamB);
+
+    /// <summary>Скважина с тремя пробами; пластопересечение A связано с пробами 1 и 2, B — с пробой 2.</summary>
+    private static Setup Seed()
+    {
+        var testDb = new TestDb();
+        using var db = testDb.CreateDbContext();
+        var seam = new Seam { Description = "Пласт 1", ShortName = "П1" };
+        var hole = new Borehole { HoleName = "A" };
+        var otherHole = new Borehole { HoleName = "B" };
+        db.AddRange(seam, hole, otherHole);
+        db.SaveChanges();
+        var layer = new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 0, DepthTo = 100 };
+        db.Lithologies.Add(layer);
+        db.SaveChanges();
+        var seamA = new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = layer.LithologyId, DepthToId = layer.LithologyId };
+        var seamB = new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 200, DepthFromId = layer.LithologyId, DepthToId = layer.LithologyId };
+        db.SeamDefs.AddRange(seamA, seamB);
+        var s3 = new SampleDef { BoreholeId = hole.BoreholeId, DepthFrom = 30, DepthTo = 31, Nsample = "C", AdIndex = 1 };   // добавлена первой, глубже всех
+        var s1 = new SampleDef { BoreholeId = hole.BoreholeId, DepthFrom = 10, DepthTo = 11, Nsample = "A", AdIndex = 1 };
+        var s2 = new SampleDef { BoreholeId = hole.BoreholeId, DepthFrom = 20, DepthTo = 21, Nsample = "B", AdIndex = 2 };
+        var foreign = new SampleDef { BoreholeId = otherHole.BoreholeId, DepthFrom = 1, DepthTo = 2, Nsample = "чужая" };
+        db.SampleDefs.AddRange(s3, s1, s2, foreign);
+        db.SaveChanges();
+        db.Hssamps.AddRange(
+            new Hssamp { HoleSeamId = seamA.HoleSeamId, SampleId = s1.SampleId },
+            new Hssamp { HoleSeamId = seamA.HoleSeamId, SampleId = s2.SampleId },
+            new Hssamp { HoleSeamId = seamB.HoleSeamId, SampleId = s2.SampleId });
+        db.SaveChanges();
+        return new Setup(testDb, hole.BoreholeId, seamA.HoleSeamId, seamB.HoleSeamId);
+    }
+
+    private static HoleDataService Service(Setup s) => new(s.Db);
+
+    [Fact]
+    public async Task Samples_of_the_borehole_are_loaded_ordered_by_depth()
+    {
+        var setup = Seed();
+        var data = await Service(setup).LoadAsync(setup.Hole, 100);
+
+        Assert.Equal(new[] { "A", "B", "C" }, data.Samples.Select(r => r.Nsample));
+    }
+
+    [Fact]
+    public async Task Nothing_is_loaded_for_samples_without_a_borehole()
+    {
+        var setup = Seed();
+        var data = await Service(setup).LoadAsync(null, 100);
+        Assert.Empty(data.Samples);
+    }
+
+    [Fact]
+    public async Task Accepted_follows_the_selected_seam_and_samples_without_a_link_are_not_accepted()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        data.Samples.Single(r => r.Nsample == "A").Def.Hssamps.Single().Accepted = true;
+
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+
+        Assert.True(data.Samples.Single(r => r.Nsample == "A").Accepted);
+        Assert.False(data.Samples.Single(r => r.Nsample == "B").Accepted);
+        Assert.Equal(new[] { true, true, false }, data.Samples.Select(r => r.HasSeamLink));   // A, B, C
+    }
+
+    [Fact]
+    public async Task Samples_are_numbered_by_depth_among_the_shown_ones()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        service.UpdateSampleView(setup.SeamA, bySeam: false);   // вся скважина
+        Assert.Equal(new[] { 1, 2, 3 }, data.Samples.Select(r => r.N));
+
+        service.UpdateSampleView(setup.SeamB, bySeam: true);    // только пробы пластопересечения B: проба «B»
+        Assert.Equal(new[] { 0, 1, 0 }, data.Samples.Select(r => r.N));
+    }
+
+    [Fact]
+    public async Task Accepted_edit_is_saved_to_the_link_of_the_selected_seam_only()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+
+        data.Samples.Single(r => r.Nsample == "B").Accepted = true;
+        await service.SaveAsync();
+
+        using var db = setup.Db.CreateDbContext();
+        Assert.True(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamA && h.Sample.Nsample == "B").Accepted);
+        Assert.False(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamB).Accepted);
+    }
+
+    [Fact]
+    public async Task Accepted_cannot_be_set_for_a_sample_without_a_link()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+
+        data.Samples.Single(r => r.Nsample == "C").Accepted = true;
+
+        Assert.False(data.Samples.Single(r => r.Nsample == "C").Accepted);
+        Assert.False(service.HasChanges);
+    }
+
+    [Fact]
+    public async Task Sample_fields_are_saved_through_SampleDef()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        var row = data.Samples.Single(r => r.Nsample == "A");
+
+        row.Bad = true;
+        row.Nsample = "A2";
+        row.DepthFrom = 12;
+        row.DepthTo = 13;
+        row.AdIndex = 3;
+        await service.SaveAsync();
+
+        using var db = setup.Db.CreateDbContext();
+        var saved = db.SampleDefs.Single(s => s.SampleId == row.SampleId);
+        Assert.True(saved.Bad);
+        Assert.Equal("A2", saved.Nsample);
+        Assert.Equal((12m, 13m, 3), (saved.DepthFrom, saved.DepthTo, saved.AdIndex));
+    }
+
+    [Fact]
+    public async Task Invalid_sample_blocks_the_save()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        data.Samples.First().DepthTo = -5;
+
+        var error = await Assert.ThrowsAsync<DataValidationException>(() => service.SaveAsync());
+        Assert.Contains(error.Errors, e => e.EndsWith("Глубина «До» должна быть больше «От»."));
+    }
+
+    [Fact]
+    public async Task Added_sample_gets_the_borehole_and_defaults_and_is_saved_in_borehole_mode()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        service.UpdateSampleView(setup.SeamA, bySeam: false);
+
+        var row = new SampleRow { DepthFrom = 50, DepthTo = 51, Nsample = "новая" };
+        data.Samples.Add(row);
+        await service.SaveAsync();
+
+        using var db = setup.Db.CreateDbContext();
+        var saved = db.SampleDefs.Single(s => s.Nsample == "новая");
+        Assert.Equal(setup.Hole, saved.BoreholeId);
+        Assert.Equal(1, saved.AdIndex);   // как DF_Samples_Ad_index
+        Assert.True(saved.Show);
+        Assert.True(row.SampleId > 0);
+    }
+
+    [Fact]
+    public async Task Removed_sample_is_deleted_in_borehole_mode()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        service.UpdateSampleView(null, bySeam: false);
+
+        data.Samples.Remove(data.Samples.Single(r => r.Nsample == "C"));
+        await service.SaveAsync();
+
+        using var db = setup.Db.CreateDbContext();
+        Assert.DoesNotContain(db.SampleDefs, s => s.Nsample == "C");
+    }
+
+    [Fact]
+    public async Task Adding_and_removing_samples_is_ignored_in_seam_mode()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+
+        data.Samples.Add(new SampleRow { DepthFrom = 50, DepthTo = 51, Nsample = "лишняя" });
+        data.Samples.Remove(data.Samples.Single(r => r.Nsample == "A"));
+
+        Assert.False(service.HasChanges);
+        await service.SaveAsync();
+        using var db = setup.Db.CreateDbContext();
+        Assert.DoesNotContain(db.SampleDefs, s => s.Nsample == "лишняя");
+        Assert.Contains(db.SampleDefs, s => s.Nsample == "A");
+    }
+
+    [Fact]
+    public async Task Links_added_and_removed_by_database_triggers_are_picked_up_after_saving()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        var sampleC = data.Samples.Single(r => r.Nsample == "C");
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+        Assert.False(sampleC.HasSeamLink);
+
+        using (var db = setup.Db.CreateDbContext())   // «триггер»: связь C с A появилась, связь B с A исчезла
+        {
+            db.Hssamps.Add(new Hssamp { HoleSeamId = setup.SeamA, SampleId = sampleC.SampleId });
+            db.Hssamps.Remove(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamA && h.Sample.Nsample == "B"));
+            db.SaveChanges();
+        }
+        await service.RefreshSamplesAsync();
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+
+        Assert.Equal(new[] { true, false, true }, data.Samples.Select(r => r.HasSeamLink));   // A, B, C
+    }
+
+    [Fact]
+    public async Task Ad_index_lookup_uses_the_dictionary_number_not_the_key()
+    {
+        var testDb = new TestDb();
+        using (var db = testDb.CreateDbContext())
+        {
+            db.Dictionaries.AddRange(
+                new Dictionary { Section = "Ad", N = 2, Description = "Ad флот" },
+                new Dictionary { Section = "Ad", N = 1, Description = "Ad" },
+                new Dictionary { Section = "марка", N = 1, Description = "не берём" });
+            db.SaveChanges();
+        }
+        var service = new HoleDataService(testDb);
+        await service.LoadAsync(null, null);
+
+        var items = await service.GetAdIndexLookupAsync();
+
+        Assert.Equal(new[] { (1, "Ad"), (2, "Ad флот") }, items.Select(i => (i.Id, i.Name)));
+    }
+}
