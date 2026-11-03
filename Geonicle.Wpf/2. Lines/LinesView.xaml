@@ -14,17 +14,19 @@
                                EventName="Loaded"/>
     </dxmvvm:Interaction.Behaviors>
 
-    <!-- Экран только размещает гриды; колонки и настройки каждого грида — в Views/Grids. -->
+    <!-- Экран только размещает гриды; колонки и настройки каждого грида — в его файле в папке экрана. -->
     <dxlc:LayoutControl Orientation="Vertical" Padding="0">
-        <dxlc:LayoutGroup Header="Разведочные линии"
-                          View="GroupBox"
+        <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowVerticalSizing="True">
-            <grids:LinesGrid />
+            <dxlc:LayoutGroup Header="Разведочные линии">
+                <grids:LinesGrid />
+            </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
 
-        <dxlc:LayoutGroup Header="Скважины в разведочных линиях"
-                          View="GroupBox">
-            <grids:LineHolesGrid />
+        <dxlc:LayoutGroup View="Tabs">
+            <dxlc:LayoutGroup Header="Скважины в разведочных линиях">
+                <grids:LineHolesGrid />
+            </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
     </dxlc:LayoutControl>
 </UserControl>

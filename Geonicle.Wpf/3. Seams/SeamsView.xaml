@@ -16,22 +16,25 @@
 
     <!-- Экран только размещает гриды: слева «Пласты», справа сверху «Детали», справа снизу «Коэффициенты». -->
     <dxlc:LayoutControl Orientation="Horizontal" Padding="0">
-        <dxlc:LayoutGroup Header="Пласты"
-                          View="GroupBox"
+        <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowHorizontalSizing="True">
-            <grids:SeamsGrid />
+            <dxlc:LayoutGroup Header="Пласты">
+                <grids:SeamsGrid />
+            </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
 
         <dxlc:LayoutGroup Orientation="Vertical">
-            <dxlc:LayoutGroup Header="Детали"
-                              View="GroupBox"
+            <dxlc:LayoutGroup View="Tabs"
                               dxlc:LayoutControl.AllowVerticalSizing="True">
-                <grids:PartsGrid />
+                <dxlc:LayoutGroup Header="Детали">
+                    <grids:PartsGrid />
+                </dxlc:LayoutGroup>
             </dxlc:LayoutGroup>
 
-            <dxlc:LayoutGroup Header="Коэффициенты"
-                              View="GroupBox">
-                <grids:CoeffsGrid />
+            <dxlc:LayoutGroup View="Tabs">
+                <dxlc:LayoutGroup Header="Коэффициенты">
+                    <grids:CoeffsGrid />
+                </dxlc:LayoutGroup>
             </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
     </dxlc:LayoutControl>

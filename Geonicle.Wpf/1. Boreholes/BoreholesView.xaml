@@ -14,7 +14,7 @@
                                EventName="Loaded"/>
     </dxmvvm:Interaction.Behaviors>
 
-    <!-- Экран только размещает гриды; колонки и настройки каждого грида — в Views/Grids. -->
+    <!-- Экран только размещает гриды; колонки и настройки каждого грида — в его файле в папке экрана. -->
     <dxlc:LayoutControl Orientation="Vertical" Padding="0">
         <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowVerticalSizing="True">

@@ -21,14 +21,15 @@
 - При уходе с экрана с несохранёнными изменениями спрашиваем (см. `MainViewModel.NavigateAsync`). Закрытие окна пока не обрабатываем.
 
 ## Новый экран: чек-лист
+0. Папка экрана «N. Имя» (см. «Структура папок») в `Geonicle.Wpf` и в `Geonicle.Data`.
 1. Сервис данных от `EditableDataService`, интерфейс от `IEditableDataService`; регистрация в `App.xaml.cs`.
 2. Модель от `DataViewModelBase`; контекстные меню гридов объявляются в конструкторе (см. ниже).
 3. В `MainWindow.xaml`: `DataTemplate` для модели и пункт `AccordionItem` с `Tag`.
-4. Каждый грид — отдельный `UserControl` в `Views/Grids/` со своими колонками, настроенный по списку «Стандартные настройки гридов». Экран (`Views/XxxView.xaml`) только размещает гриды.
+4. Каждый грид — отдельный `UserControl` в папке экрана со своими колонками, настроенный по списку «Стандартные настройки гридов». Экран (`XxxView.xaml` в той же папке) только размещает гриды.
 5. Загрузка при открытии — через `InitializeCommand` по событию `Loaded` (как в `BoreholesView.xaml`).
 
 ## Стандартные настройки гридов
-Каждый грид — отдельный `UserControl` в `Views/Grids/` (образец: `BoreholesGrid.xaml`, `SurveysGrid.xaml`). Колонки описываются явно в этом файле: `AutoGenerateColumns="None"` и `GridColumn` с `FieldName` и `Header`. Подписи колонок и скрытие полей в сгенерированных классах EF (`[DisplayName]`, `[Browsable]`) не храним: скаффолд их стирает. DataContext грид наследует от экрана.
+Каждый грид — отдельный `UserControl` в папке экрана (образец: `BoreholesGrid.xaml`, `SurveysGrid.xaml`). Колонки описываются явно в этом файле: `AutoGenerateColumns="None"` и `GridColumn` с `FieldName` и `Header`. Подписи колонок и скрытие полей в сгенерированных классах EF (`[DisplayName]`, `[Browsable]`) не храним: скаффолд их стирает. DataContext грид наследует от экрана.
 
 Каждый `GridControl` и его `TableView`:
 
@@ -46,7 +47,7 @@
 
 ### Выпадающие списки в колонках
 - Справочник для `ComboBoxEditSettings` модель экрана загружает отдельным лёгким запросом (`AsNoTracking`, только код и название, см. `BoreholeLookupItem`) и отдаёт свойством.
-- В XAML грида список берём через `helpers:BindingProxy` (ресурс `Data="{Binding}"`), потому что `EditSettings` не видят DataContext. Образец: `Views/Grids/LineHolesGrid.xaml`.
+- В XAML грида список берём через `helpers:BindingProxy` (ресурс `Data="{Binding}"`), потому что `EditSettings` не видят DataContext. Образец: `2. Lines/LineHolesGrid.xaml`.
 
 - Колонки с `enum`: явный `ComboBoxEditSettings` с `ItemsSource="{dxe:EnumItemsSource EnumType={x:Type models:Имя}}"` и `IsTextEditable="False"` (подписи берутся из `[Display(Name=...)]`). Автоматически редактор-список для enum при явных колонках не создаётся.
 
@@ -55,9 +56,9 @@
 - В XAML файла грида только `menus:GridContextMenu.Menu="{Binding ...}"` на `TableView`; код-behind для меню не нужен.
 
 ## Данные и EF
-- Ручные настройки модели EF — в `Geonicle.Data/GDB52Context.Partial.cs` (`OnModelCreatingPartial`), сгенерированный `GDB52Context.cs` не правим. Обязательные связи `ClientSetNull` переводятся в `Cascade` (только в трекере EF): иначе удаление строки подчинённого грида из коллекции родителя падает с «association has been severed».
+- Ручные настройки модели EF — в `Geonicle.Data/GDB52Context_.cs` (`OnModelCreatingPartial`), сгенерированный `GDB52Context.cs` не правим. Обязательные связи `ClientSetNull` переводятся в `Cascade` (только в трекере EF): иначе удаление строки подчинённого грида из коллекции родителя падает с «association has been severed».
 
-- У `Coeffs` в модели приложения ключ — `CoeffId` (в БД составной): иначе EF не даёт менять в гриде прослой, тип и марку у существующей строки. Это в `GDB52Context.Partial.cs`.
+- У `Coeffs` в модели приложения ключ — `CoeffId` (в БД составной): иначе EF не даёт менять в гриде прослой, тип и марку у существующей строки. Это в `GDB52Context_.cs`.
 - Справочники для списков в колонках — `LookupItem(Id, Name)` (`ValueMember="Id" DisplayMember="Name"`), по одному свойству на справочник в модели экрана.
 
 ## Логика БД и код
@@ -85,10 +86,14 @@
 - Тесты WPF-моделей: проект `Geonicle.Wpf.Tests` (xUnit, net10.0-windows, только Windows, нужна лента DevExpress). `FakeDialogs` и `TestScreen` в `Fakes.cs`; `DataViewModelBaseTests`, `MainViewModelTests` и `CompositionTests` (контейнер собирается из `AppServices.AddGeonicleApp`, он же используется в `App`). Запуск: `dotnet test Geonicle.Wpf.Tests` на Windows. Правки в `Geonicle.Wpf` (модели, сервисы, регистрации) сопровождаем тестами там же. XAML и гриды юнит-тестами не покрываются, проверяются вручную.
 - На сервере (Linux) логику моделей Wpf можно проверить временным проектом без DevExpress: исходники моделей и тестов подключаются как ссылки, `DevExpress.Mvvm.ViewModelBase`/`AsyncCommand` и перечисления `System.Windows.MessageBox*` заменяются заглушками; на net10.0-windows этот проект на Linux не запустить (нет WindowsDesktop).
 
+## Структура папок
+- Всё, что относится к одному экрану, лежит в одной папке с номером и именем: `1. Boreholes`, `2. Lines`, `3. Seams`, `4. Lithology`. Такая папка есть и в `Geonicle.Wpf` (вид, модель экрана, гриды), и в `Geonicle.Data` (сервис данных, валидаторы, вспомогательные классы справочников). Общее для всех экранов (`DataViewModelBase`, `EditableDataService`, меню, лента, `LookupItem`) остаётся в общих папках.
+- Пространства имён по папкам экранов не меняем: `Geonicle.Wpf.Views`, `Geonicle.Wpf.Views.Grids`, `Geonicle.Wpf.ViewModels`, `Geonicle.Data.Services`, `Geonicle.Validation`.
+
 ## Раскладка экранов
-- Размещение и разделение гридов на всех экранах — через `dxlc:LayoutControl`. Подпись грида — `dxlc:LayoutGroup Header="..." View="GroupBox"` (подпись сверху слева, рамка); `View="Group"` заголовок не показывает. У верхних групп `dxlc:LayoutControl.AllowVerticalSizing="True"`.
+- Размещение и разделение гридов на всех экранах — через `dxlc:LayoutControl`. Каждый грид помещается в группу-вкладку: `<dxlc:LayoutGroup View="Tabs"><dxlc:LayoutGroup Header="..."><grids:XxxGrid/></dxlc:LayoutGroup></dxlc:LayoutGroup>` (подпись выглядит как вкладка сверху слева, как в Delphi-версии). `GroupBox` не используем. Размеры меняются атрибутом `dxlc:LayoutControl.AllowVerticalSizing="True"` (или `AllowHorizontalSizing`) на внешней группе `View="Tabs"`.
 
 ## Журнал решений
 - Привязки к команде главной модели из popup-меню грида ненадёжны, поэтому `GridContextMenu` передаёт команды объектами.
 - Инкрементальный поиск: пробовали `AllowIncrementalSearch` на колонках и `EditorShowMode="MouseUpFocused"` — отказались, оставили настройки `TableView` из списка выше.
-- Колонки гридов: автогенерация не используем, описание колонок каждого грида в отдельном файле `Views/Grids/<Имя>Grid.xaml` (решение пользователя).
+- Колонки гридов: автогенерация не используем, описание колонок каждого грида в отдельном файле `<Имя>Grid.xaml` в папке экрана (решение пользователя).
