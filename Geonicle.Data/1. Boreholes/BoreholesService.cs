@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
-namespace Geonicle.Infrastructure
+namespace Geonicle.Data.Services
 {
     public class BoreholesService : EditableDataService, IBoreholesService
     {

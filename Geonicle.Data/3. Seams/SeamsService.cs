@@ -1,8 +1,9 @@
 ﻿using Data.Models;
+using Geonicle.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 
-namespace Geonicle.Infrastructure
+namespace Geonicle.Data.Services
 {
     public class SeamsService : EditableDataService, ISeamsService
     {

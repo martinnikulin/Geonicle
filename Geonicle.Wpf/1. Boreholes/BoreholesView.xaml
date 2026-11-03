@@ -16,15 +16,17 @@
 
     <!-- Экран только размещает гриды; колонки и настройки каждого грида — в Views/Grids. -->
     <dxlc:LayoutControl Orientation="Vertical" Padding="0">
-        <dxlc:LayoutGroup Header="Скважины"
-                          View="GroupBox"
+        <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowVerticalSizing="True">
-            <grids:BoreholesGrid />
+            <dxlc:LayoutGroup Header="Скважины">
+                <grids:BoreholesGrid />
+            </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
 
-        <dxlc:LayoutGroup Header="Инклинометрия"
-                          View="GroupBox">
-            <grids:SurveysGrid />
+        <dxlc:LayoutGroup View="Tabs">
+            <dxlc:LayoutGroup Header="Инклинометрия">
+                <grids:SurveysGrid />
+            </dxlc:LayoutGroup>    
         </dxlc:LayoutGroup>
     </dxlc:LayoutControl>
 </UserControl>

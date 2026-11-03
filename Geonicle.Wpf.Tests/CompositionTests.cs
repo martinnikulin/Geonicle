@@ -1,4 +1,5 @@
-﻿using Geonicle.Infrastructure;
+﻿using Geonicle.Data.Services;
+using Geonicle.Infrastructure;
 using Geonicle.Wpf.Ribbon;
 using Geonicle.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;

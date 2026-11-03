@@ -1,5 +1,5 @@
 using Data.Models;
-using Geonicle.Infrastructure;
+using Geonicle.Data.Services;
 using Geonicle.Validation;
 using Xunit;
 

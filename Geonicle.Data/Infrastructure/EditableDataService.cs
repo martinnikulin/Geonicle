@@ -2,7 +2,7 @@
 using Geonicle.Validation;
 using Microsoft.EntityFrameworkCore;
 
-namespace Geonicle.Infrastructure
+namespace Geonicle.Data.Services
 {
     /// <summary>
     /// Владеет контекстом на время жизни экрана: правки накапливаются в нём до SaveAsync.
