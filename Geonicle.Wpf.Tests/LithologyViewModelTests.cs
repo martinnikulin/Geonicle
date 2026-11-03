@@ -57,6 +57,27 @@ public sealed class FakeHoleData : IHoleDataService
 
     public void UpdateSeamNames() => SeamNameUpdates++;
 
+    public List<IReadOnlyList<Lithology>> Added { get; } = new();
+
+    public List<(SeamDef Seam, IReadOnlyList<Lithology> Layers)> Redefined { get; } = new();
+
+    /// <summary>Если задана, добавление и переопределение бросают её (ошибка, понятная пользователю).</summary>
+    public HoleDataException EditError { get; set; }
+
+    public Task<SeamDef> AddHoleSeamAsync(IReadOnlyList<Lithology> layers)
+    {
+        if (EditError != null) throw EditError;
+        Added.Add(layers);
+        return Task.FromResult(new SeamDef { HoleSeamId = 99 });
+    }
+
+    public Task RedefineHoleSeamAsync(SeamDef seam, IReadOnlyList<Lithology> layers)
+    {
+        if (EditError != null) throw EditError;
+        Redefined.Add((seam, layers));
+        return Task.CompletedTask;
+    }
+
     private Task<IReadOnlyList<LookupItem>> Items(string name)
     {
         OnLookup?.Invoke();
@@ -326,6 +347,148 @@ public class LithologyViewModelTests
         await screen.RefreshAsync();
 
         Assert.Equal(2, screen.SelectedHoleSeam.HoleSeamId);
+    }
+
+    private static Lithology Layer(int id, decimal from, decimal to) => new() { LithologyId = id, DepthFrom = from, DepthTo = to };
+
+    private async Task<LithologyViewModel> LoadedScreenWithSelection(bool sortedByDepth, params Lithology[] selected)
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12));
+        var screen = Screen();
+        await screen.LoadAsync();
+        screen.LayerSelectionProvider = () => new LayerSelection(selected, sortedByDepth);
+        return screen;
+    }
+
+    [Fact]
+    public async Task Seam_menu_items_are_declared_in_the_lithology_menu()
+    {
+        var screen = await LoadedScreenWithSelection(true, Layer(1, 0, 5));
+
+        Assert.Equal(
+            new[] { "Обновить", "Добавить пластопересечение", "Переопределить пластопересечение" },
+            screen.LithologyMenu.Items.Select(i => i.Caption));
+        Assert.Same(screen.AddHoleSeamCommand, screen.LithologyMenu.Items[1].Command);
+        Assert.Same(screen.RedefineHoleSeamCommand, screen.LithologyMenu.Items[2].Command);
+    }
+
+    [Fact]
+    public async Task Seam_commands_are_available_for_selected_rows_when_sorted_by_depth_and_all_lithology_is_shown()
+    {
+        var screen = await LoadedScreenWithSelection(true, Layer(1, 0, 5));
+
+        Assert.True(screen.CanAddHoleSeam);
+        Assert.True(screen.CanRedefineHoleSeam);
+    }
+
+    [Fact]
+    public async Task Seam_commands_are_unavailable_when_the_by_seam_checkbox_is_on()
+    {
+        var screen = await LoadedScreenWithSelection(true, Layer(1, 0, 5));
+
+        screen.ShowByHoleSeam = true;
+
+        Assert.False(screen.CanAddHoleSeam);
+        Assert.False(screen.CanRedefineHoleSeam);
+    }
+
+    [Fact]
+    public async Task Seam_commands_are_unavailable_without_selection_or_depth_sort()
+    {
+        var unsorted = await LoadedScreenWithSelection(false, Layer(1, 0, 5));
+        Assert.False(unsorted.CanAddHoleSeam);
+
+        var none = await LoadedScreenWithSelection(true);
+        Assert.False(none.CanAddHoleSeam);
+
+        var noGrid = Screen();
+        await noGrid.LoadAsync();
+        Assert.False(noGrid.CanAddHoleSeam);
+    }
+
+    [Fact]
+    public async Task Redefine_needs_a_selected_seam_but_add_does_not()
+    {
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        var screen = Screen();
+        await screen.LoadAsync();   // пластопересечений нет
+        screen.LayerSelectionProvider = () => new LayerSelection(new[] { Layer(1, 0, 5) }, true);
+
+        Assert.True(screen.CanAddHoleSeam);
+        Assert.False(screen.CanRedefineHoleSeam);
+    }
+
+    [Fact]
+    public async Task Seam_commands_are_unavailable_without_a_borehole_or_interbed()
+    {
+        var screen = Screen();
+        await screen.LoadAsync();   // лента ещё ничего не выбрала
+        screen.LayerSelectionProvider = () => new LayerSelection(new[] { Layer(1, 0, 5) }, true);
+
+        Assert.False(screen.CanAddHoleSeam);
+    }
+
+    [Fact]
+    public async Task Adding_passes_the_selected_rows_selects_the_new_seam_and_refreshes_the_grids()
+    {
+        var selected = new[] { Layer(1, 0, 5), Layer(2, 5, 10) };
+        var screen = await LoadedScreenWithSelection(true, selected);
+        var refreshes = 0;
+        screen.RefreshRequested += (_, _) => refreshes++;
+
+        await screen.AddHoleSeamAsync();
+
+        Assert.Equal(selected, service.Added.Single());
+        Assert.Equal(99, screen.SelectedHoleSeam.HoleSeamId);
+        Assert.Equal(1, refreshes);
+    }
+
+    [Fact]
+    public async Task Redefining_passes_the_selected_seam_and_rows_and_refreshes_the_grids()
+    {
+        var selected = new[] { Layer(1, 0, 5) };
+        var screen = await LoadedScreenWithSelection(true, selected);
+        var seam = screen.SelectedHoleSeam;
+        var refreshes = 0;
+        screen.RefreshRequested += (_, _) => refreshes++;
+
+        await screen.RedefineHoleSeamAsync();
+
+        var call = Assert.Single(service.Redefined);
+        Assert.Same(seam, call.Seam);
+        Assert.Equal(selected, call.Layers);
+        Assert.Equal(1, refreshes);
+    }
+
+    [Fact]
+    public async Task Unavailable_commands_do_nothing()
+    {
+        var screen = await LoadedScreenWithSelection(false, Layer(1, 0, 5));
+
+        await screen.AddHoleSeamAsync();
+        await screen.RedefineHoleSeamAsync();
+
+        Assert.Empty(service.Added);
+        Assert.Empty(service.Redefined);
+    }
+
+    [Fact]
+    public async Task Service_errors_are_shown_to_the_user_and_do_not_refresh()
+    {
+        var screen = await LoadedScreenWithSelection(true, Layer(1, 0, 5));
+        service.EditError = new HoleDataException("Нет пласта без названия.");
+        var refreshes = 0;
+        screen.RefreshRequested += (_, _) => refreshes++;
+
+        await screen.AddHoleSeamAsync();
+
+        var shown = Assert.Single(dialogs.Shown);
+        Assert.Equal("Нет пласта без названия.", shown.Text);
+        Assert.Equal(MessageBoxImage.Warning, shown.Icon);
+        Assert.Equal(0, refreshes);
     }
 
     [Fact]

@@ -241,3 +241,244 @@ public class HoleDataServiceTests
         Assert.Equal(new[] { "А пласт", "Б пласт" }, (await service.GetSeamLookupAsync()).Select(i => i.Name));
     }
 }
+
+/// <summary>Добавление и переопределение пластопересечений по выбранным строкам литологии.</summary>
+public class HoleSeamEditingTests
+{
+    private sealed record Setup(TestDb Db, int Hole, int NoNameSeamId);
+
+    private static Setup Seed()
+    {
+        var testDb = new TestDb();
+        using var db = testDb.CreateDbContext();
+        // В InMemory ключ не может быть 0, поэтому «пласт без названия» получает свой код, который сервису сообщается явно.
+        var noName = new Seam { Description = "", ShortName = "" };
+        var named = new Seam { Description = "Пласт 1", ShortName = "П1" };
+        var hole = new Borehole { HoleName = "A" };
+        db.AddRange(noName, named, hole);
+        db.SaveChanges();
+        db.Lithologies.AddRange(
+            new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 0, DepthTo = 10 },
+            new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 10, DepthTo = 20 },
+            new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 20, DepthTo = 30 },
+            new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 30, DepthTo = 40 });
+        db.SaveChanges();
+        return new Setup(testDb, hole.BoreholeId, noName.SeamId);
+    }
+
+    private static HoleDataService Service(Setup s) => new(s.Db) { NoNameSeamId = s.NoNameSeamId };
+
+    private static IReadOnlyList<Lithology> Layers(HoleData data, params decimal[] depthFrom) =>
+        depthFrom.Select(d => data.Lithology.Single(l => l.DepthFrom == d)).ToList();
+
+    [Fact]
+    public async Task Adding_a_seam_uses_the_first_and_last_selected_layers_and_the_no_name_seam()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        var seam = await service.AddHoleSeamAsync(Layers(data, 10, 20, 30));
+
+        Assert.Equal(setup.NoNameSeamId, seam.SeamId);
+        Assert.Equal(setup.Hole, seam.BoreholeId);
+        Assert.Equal(100, seam.InterbedId);
+        Assert.Equal(10, seam.DepthFrom);   // верхняя граница — первая выбранная строка
+        Assert.Equal(40, seam.DepthTo);     // нижняя — последняя
+        Assert.Equal(10, seam.DrawFrom);    // стопки по умолчанию как глубины границ
+        Assert.Equal(40, seam.DrawTo);
+        Assert.Contains(seam, data.HoleSeams);   // виден в гриде сразу, до сохранения
+    }
+
+    [Fact]
+    public async Task Added_seam_is_saved_and_layers_inside_get_its_name()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        await service.AddHoleSeamAsync(Layers(data, 10, 20));
+        await service.SaveAsync();
+
+        using var db = testDbContext(setup);
+        var saved = db.SeamDefs.Single();
+        Assert.Equal(setup.NoNameSeamId, saved.SeamId);
+        Assert.Equal(setup.Hole, saved.BoreholeId);
+        Assert.True(saved.HoleSeamId > 0);
+        Assert.Equal(db.Lithologies.Single(l => l.DepthFrom == 10).LithologyId, saved.DepthFromId);
+        Assert.Equal(db.Lithologies.Single(l => l.DepthFrom == 20).LithologyId, saved.DepthToId);
+    }
+
+    [Fact]
+    public async Task A_single_selected_layer_makes_a_seam_of_that_layer()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        var seam = await service.AddHoleSeamAsync(Layers(data, 20));
+
+        Assert.Equal(20, seam.DepthFrom);
+        Assert.Equal(30, seam.DepthTo);
+    }
+
+    [Fact]
+    public async Task Layers_inside_a_new_seam_get_the_seam_name_column_recalculated()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        Assert.All(data.Lithology, l => Assert.Null(l.SeamName));
+
+        await service.AddHoleSeamAsync(Layers(data, 10, 20));
+
+        // Название пласта без названия пустое, но слои вне пластопересечения остаются null, внутри получают ""
+        Assert.Null(data.Lithology.Single(l => l.DepthFrom == 0).SeamName);
+        Assert.Equal("", data.Lithology.Single(l => l.DepthFrom == 10).SeamName);
+        Assert.Equal("", data.Lithology.Single(l => l.DepthFrom == 20).SeamName);
+        Assert.Null(data.Lithology.Single(l => l.DepthFrom == 30).SeamName);
+    }
+
+    [Fact]
+    public async Task Adding_without_selected_layers_is_rejected()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        await service.LoadAsync(setup.Hole, 100);
+
+        var error = await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(new List<Lithology>()));
+        Assert.Contains("Выберите строки литологии", error.Message);
+    }
+
+    [Fact]
+    public async Task Unsaved_layers_in_the_selection_are_rejected()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        var unsaved = new Lithology { DepthFrom = 40, DepthTo = 50 };
+        data.Lithology.Add(unsaved);
+
+        var error = await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(new[] { Layers(data, 30)[0], unsaved }));
+        Assert.Contains("несохранённые", error.Message);
+    }
+
+    [Fact]
+    public async Task Missing_no_name_seam_gives_a_clear_error()
+    {
+        var setup = Seed();
+        var service = new HoleDataService(setup.Db) { NoNameSeamId = 12345 };
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        var error = await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(Layers(data, 10)));
+        Assert.Contains("нет «пласта без названия»", error.Message);
+    }
+
+    [Fact]
+    public async Task Adding_without_a_loaded_borehole_is_rejected()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(null, 100);
+
+        await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(new[] { new Lithology { LithologyId = 1 } }));
+    }
+
+    [Fact]
+    public async Task Redefining_changes_only_the_boundaries()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        var seam = await service.AddHoleSeamAsync(Layers(data, 0, 10));
+        seam.Comments = "оставить";
+        await service.SaveAsync();
+
+        await service.RedefineHoleSeamAsync(seam, Layers(data, 20, 30));
+        await service.SaveAsync();
+
+        Assert.Equal(20, seam.DepthFrom);
+        Assert.Equal(40, seam.DepthTo);
+        using var db = testDbContext(setup);
+        var saved = db.SeamDefs.Single();
+        Assert.Equal("оставить", saved.Comments);
+        Assert.Equal(db.Lithologies.Single(l => l.DepthFrom == 20).LithologyId, saved.DepthFromId);
+        Assert.Equal(db.Lithologies.Single(l => l.DepthFrom == 30).LithologyId, saved.DepthToId);
+    }
+
+    [Fact]
+    public async Task Redefining_updates_the_seam_name_column()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        var seam = await service.AddHoleSeamAsync(Layers(data, 0));
+        Assert.Equal("", data.Lithology.Single(l => l.DepthFrom == 0).SeamName);
+
+        await service.RedefineHoleSeamAsync(seam, Layers(data, 20));
+
+        Assert.Null(data.Lithology.Single(l => l.DepthFrom == 0).SeamName);
+        Assert.Equal("", data.Lithology.Single(l => l.DepthFrom == 20).SeamName);
+    }
+
+    [Fact]
+    public async Task Redefining_a_seam_that_is_not_on_the_screen_is_rejected()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+
+        await Assert.ThrowsAsync<HoleDataException>(() => service.RedefineHoleSeamAsync(new SeamDef(), Layers(data, 10)));
+    }
+
+    [Fact]
+    public async Task Overlapping_seam_blocks_the_save()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        await service.AddHoleSeamAsync(Layers(data, 0, 10));
+        await service.SaveAsync();
+
+        await service.AddHoleSeamAsync(Layers(data, 10, 20));   // слой 10–20 уже в первом пластопересечении
+
+        var error = await Assert.ThrowsAsync<DataValidationException>(() => service.SaveAsync());
+        Assert.Contains(error.Errors, e => e.EndsWith("пересекается с другим пластопересечением этого прослоя."));
+    }
+
+    [Fact]
+    public async Task Seam_with_the_same_boundaries_is_allowed_in_another_interbed()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var first = await service.LoadAsync(setup.Hole, 100);
+        await service.AddHoleSeamAsync(Layers(first, 10, 20));
+        await service.SaveAsync();
+
+        var second = await service.LoadAsync(setup.Hole, 200);
+        await service.AddHoleSeamAsync(Layers(second, 10, 20));
+        await service.SaveAsync();
+
+        using var db = testDbContext(setup);
+        Assert.Equal(2, db.SeamDefs.Count());
+    }
+
+    [Fact]
+    public async Task A_seam_can_be_deleted_with_the_standard_removal()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        var seam = await service.AddHoleSeamAsync(Layers(data, 10, 20));
+        await service.SaveAsync();
+
+        data.HoleSeams.Remove(seam);
+        await service.SaveAsync();
+
+        using var db = testDbContext(setup);
+        Assert.Empty(db.SeamDefs);
+        Assert.Equal(4, db.Lithologies.Count());   // слои остаются
+    }
+
+    private static GDB52Context testDbContext(Setup setup) => setup.Db.CreateDbContext();
+}

@@ -7,6 +7,7 @@
     xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
     xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
     xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
     xmlns:grids="clr-namespace:Geonicle.Wpf.Views.Grids"
     mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="530">
 
@@ -15,7 +16,8 @@
                                EventName="Loaded"/>
     </dxmvvm:Interaction.Behaviors>
 
-    <!-- Экран только размещает гриды: сверху «Пластопересечения», ниже флажок и вкладки «Литология» и «Анализы». -->
+    <!-- Экран только размещает гриды: сверху «Пластопересечения», ниже вкладки «Литология» и «Анализы».
+         Флажок «по пластопересечениям» стоит в области справа от заголовков вкладок (ControlBoxPanelContent). -->
     <dxlc:LayoutControl Orientation="Vertical" Padding="0">
         <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowVerticalSizing="True">
@@ -24,17 +26,21 @@
             </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
 
-        <dxlc:LayoutItem>
-            <dxe:CheckEdit Content="Показать литологию и анализы по пластопересечениям"
-                           IsChecked="{Binding ShowByHoleSeam, Mode=TwoWay}" />
-        </dxlc:LayoutItem>
+        <dxlc:LayoutGroup>
+            <dx:DXTabControl>
+                <dx:DXTabControl.ControlBoxPanelContent>
+                    <dxe:CheckEdit Content="Показать литологию и анализы по пластопересечениям"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"
+                                   IsChecked="{Binding ShowByHoleSeam, Mode=TwoWay}" />
+                </dx:DXTabControl.ControlBoxPanelContent>
 
-        <dxlc:LayoutGroup View="Tabs">
-            <dxlc:LayoutGroup Header="Литология">
-                <grids:LithologyGrid />
-            </dxlc:LayoutGroup>
-            <!-- Грид анализов добавим после описания колонок. -->
-            <dxlc:LayoutGroup Header="Анализы" />
+                <dx:DXTabItem Header="Литология">
+                    <grids:LithologyGrid />
+                </dx:DXTabItem>
+                <!-- Грид анализов добавим после описания колонок. -->
+                <dx:DXTabItem Header="Анализы" />
+            </dx:DXTabControl>
         </dxlc:LayoutGroup>
     </dxlc:LayoutControl>
 </UserControl>

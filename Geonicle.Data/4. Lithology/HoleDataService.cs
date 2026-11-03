@@ -9,6 +9,11 @@ namespace Geonicle.Data.Services
     public class HoleDataService : EditableDataService, IHoleDataService
     {
         private HoleData? currentData;
+        private Borehole? currentBorehole;
+        private int? currentInterbedId;
+
+        /// <summary>Код «пласта без названия», к которому привязываются новые пластопересечения (по умолчанию 0; менять только в тестах).</summary>
+        public int NoNameSeamId { get; init; } = Geonicle.Validation.SeamValidator.NoNameSeamId;
 
         public HoleDataService(IDbContextFactory<GDB52Context> contextFactory)
             : base(contextFactory)
@@ -19,6 +24,8 @@ namespace Geonicle.Data.Services
         {
             var context = await ResetContextAsync();
             currentData = null;
+            currentBorehole = null;
+            currentInterbedId = interbedId;
             if (boreholeId == null || interbedId == null)
                 return new HoleData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>());
 
@@ -35,6 +42,7 @@ namespace Geonicle.Data.Services
                 .OrderBy(s => s.DepthFromNavigation.DepthFrom)
                 .LoadAsync();
 
+            currentBorehole = borehole;
             var data = new HoleData(
                 context.SeamDefs.Local.ToObservableCollection(),
                 borehole == null ? new ObservableCollection<Lithology>() : (ObservableCollection<Lithology>)borehole.Lithologies);
@@ -42,6 +50,61 @@ namespace Geonicle.Data.Services
             currentData = data;
             return data;
         }
+
+        public async Task<SeamDef> AddHoleSeamAsync(IReadOnlyList<Lithology> layers)
+        {
+            var (first, last) = Boundaries(layers);
+            if (currentBorehole == null || currentData == null || currentInterbedId == null)
+                throw new HoleDataException("Не выбрана скважина или прослой.");
+
+            var seam = new SeamDef
+            {
+                BoreholeId = currentBorehole.BoreholeId,
+                Borehole = currentBorehole,
+                InterbedId = currentInterbedId,
+                SeamId = NoNameSeamId,
+                Seam = await FindNoNameSeamAsync(),
+                DrawFrom = first.DepthFrom,   // стопки по умолчанию совпадают с глубинами границ
+                DrawTo = last.DepthTo,
+            };
+            SetBoundaries(seam, first, last);
+            Context.SeamDefs.Add(seam);       // попадает в HoleSeams (Local) сразу, до сохранения
+            UpdateSeamNames();
+            return seam;
+        }
+
+        public Task RedefineHoleSeamAsync(SeamDef seam, IReadOnlyList<Lithology> layers)
+        {
+            var (first, last) = Boundaries(layers);
+            if (currentData == null || !currentData.HoleSeams.Contains(seam))
+                throw new HoleDataException("Выберите пластопересечение.");
+
+            SetBoundaries(seam, first, last);
+            UpdateSeamNames();
+            return Task.CompletedTask;
+        }
+
+        /// <summary>Первая и последняя из выбранных строк литологии: они задают верхнюю и нижнюю границы пластопересечения.</summary>
+        private static (Lithology First, Lithology Last) Boundaries(IReadOnlyList<Lithology> layers)
+        {
+            if (layers.Count == 0)
+                throw new HoleDataException("Выберите строки литологии, которые войдут в пластопересечение.");
+            if (layers.Any(l => l.LithologyId == 0))
+                throw new HoleDataException("Среди выбранных строк литологии есть несохранённые. Сохраните данные и повторите.");
+            return (layers[0], layers[^1]);
+        }
+
+        private static void SetBoundaries(SeamDef seam, Lithology first, Lithology last)
+        {
+            seam.DepthFromId = first.LithologyId;
+            seam.DepthFromNavigation = first;
+            seam.DepthToId = last.LithologyId;
+            seam.DepthToNavigation = last;
+        }
+
+        private async Task<Seam> FindNoNameSeamAsync() =>
+            await Context.Seams.FindAsync(NoNameSeamId)
+            ?? throw new HoleDataException($"В справочнике пластов нет «пласта без названия» (код {NoNameSeamId}). Добавьте его в базу данных.");
 
         /// <summary>Пересчитывает колонку «Пласт» у слоёв литологии (после сохранения глубины могли измениться).</summary>
         public void UpdateSeamNames()
@@ -94,6 +157,15 @@ namespace Geonicle.Data.Services
     {
         /// <summary>Загружает данные скважины; если скважина или прослой не выбраны, возвращает пустые списки.</summary>
         Task<HoleData> LoadAsync(int? boreholeId, int? interbedId);
+
+        /// <summary>
+        /// Добавляет пластопересечение «без названия» (SeamId = 0): верхняя граница — первая из выбранных строк литологии,
+        /// нижняя — последняя. В БД оно появится после сохранения. Ошибки, понятные пользователю, — HoleDataException.
+        /// </summary>
+        Task<SeamDef> AddHoleSeamAsync(IReadOnlyList<Lithology> layers);
+
+        /// <summary>Меняет границы («От» и «До») пластопересечения по первой и последней из выбранных строк литологии.</summary>
+        Task RedefineHoleSeamAsync(SeamDef seam, IReadOnlyList<Lithology> layers);
 
         /// <summary>Пересчитать колонку «Пласт» у слоёв литологии (вызывается после сохранения).</summary>
         void UpdateSeamNames();

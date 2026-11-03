@@ -7,7 +7,7 @@ using System.Windows;
 namespace Geonicle.Wpf.Behaviors
 {
     /// <summary>
-    /// Присоединяемое свойство для GridControl: после успешного сохранения экрана грид перечитывает значения строк.
+    /// Присоединяемое свойство для GridControl: после успешного сохранения экрана (и по запросу экрана, RefreshRequested) грид перечитывает значения строк.
     /// Нужно, чтобы ключи, выданные БД при вставке (ID у новых строк), появлялись в гриде сразу:
     /// сущности об изменениях не уведомляют, и без этого ячейка остаётся пустой до обновления данных.
     /// Использование: behaviors:GridRefresh.RefreshOnSave="True" на GridControl (DataContext — модель экрана).
@@ -53,6 +53,7 @@ namespace Geonicle.Wpf.Behaviors
 
             EventHandler handler = (_, _) => grid.RefreshData();
             viewModel.Saved += handler;
+            viewModel.RefreshRequested += handler;
             Subscriptions.Add(grid, new Subscription(viewModel, handler));
         }
 
@@ -62,6 +63,7 @@ namespace Geonicle.Wpf.Behaviors
                 return;
 
             subscription.ViewModel.Saved -= subscription.Handler;
+            subscription.ViewModel.RefreshRequested -= subscription.Handler;
             Subscriptions.Remove(grid);
         }
 

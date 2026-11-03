@@ -1,5 +1,6 @@
 using Data.Models;
 using DevExpress.Data.Filtering;
+using DevExpress.Mvvm;
 using Geonicle.Data.Services;
 using Geonicle.Infrastructure;
 using Geonicle.Validation;
@@ -36,8 +37,12 @@ namespace Geonicle.Wpf.ViewModels
             this.dialogs = dialogs;
 
             // Контекстные меню гридов экрана: пункты и команды объявляются здесь.
+            AddHoleSeamCommand = new AsyncCommand(AddHoleSeamAsync, () => CanAddHoleSeam);
+            RedefineHoleSeamCommand = new AsyncCommand(RedefineHoleSeamAsync, () => CanRedefineHoleSeam);
             HoleSeamsMenu = CreateGridMenu();
-            LithologyMenu = CreateGridMenu();
+            LithologyMenu = CreateGridMenu()
+                .Add("Добавить пластопересечение", AddHoleSeamCommand)
+                .Add("Переопределить пластопересечение", RedefineHoleSeamCommand);
 
             filter.Changed += OnFilterChanged;
             Pending = Task.CompletedTask;
@@ -55,6 +60,24 @@ namespace Geonicle.Wpf.ViewModels
         public GridMenu HoleSeamsMenu { get; }
 
         public GridMenu LithologyMenu { get; }
+
+        /// <summary>Добавить пластопересечение по выбранным строкам литологии (пункт меню грида литологии).</summary>
+        public AsyncCommand AddHoleSeamCommand { get; }
+
+        /// <summary>Изменить границы выбранного пластопересечения по выбранным строкам литологии (пункт меню грида литологии).</summary>
+        public AsyncCommand RedefineHoleSeamCommand { get; }
+
+        /// <summary>
+        /// Выбранные в гриде литологии строки и его сортировка; задаёт грид (LithologyGridSelection) и читается в момент вызова.
+        /// </summary>
+        public Func<LayerSelection>? LayerSelectionProvider { get; set; }
+
+        /// <summary>
+        /// Пункты меню доступны, если грид показывает всю литологию (флажок снят), выбраны строки и грид отсортирован по глубине.
+        /// </summary>
+        public bool CanAddHoleSeam => CanEditBoundaries();
+
+        public bool CanRedefineHoleSeam => CanEditBoundaries() && SelectedHoleSeam != null;
 
         /// <summary>Допустимые значения колонки «КБ».</summary>
         public IReadOnlyList<string> KbValues => HoleSeamKb.Values;
@@ -78,6 +101,7 @@ namespace Geonicle.Wpf.ViewModels
             {
                 SetValue(value);
                 UpdateLithologyFilter();
+                RaiseSeamCommandsChanged();
             }
         }
 
@@ -89,6 +113,7 @@ namespace Geonicle.Wpf.ViewModels
             {
                 SetValue(value);
                 UpdateLithologyFilter();
+                RaiseSeamCommandsChanged();
             }
         }
 
@@ -178,6 +203,48 @@ namespace Geonicle.Wpf.ViewModels
         {
             filter.Changed -= OnFilterChanged;
             dataService.Dispose();
+        }
+
+        public Task AddHoleSeamAsync() =>
+            EditBoundariesAsync(CanAddHoleSeam, async layers => SelectedHoleSeam = await dataService.AddHoleSeamAsync(layers));
+
+        public Task RedefineHoleSeamAsync() =>
+            EditBoundariesAsync(CanRedefineHoleSeam, layers => dataService.RedefineHoleSeamAsync(SelectedHoleSeam!, layers));
+
+        /// <summary>Выполняет действие над границами по выбранным строкам; ошибки сервиса показывает пользователю.</summary>
+        private async Task EditBoundariesAsync(bool allowed, Func<IReadOnlyList<Lithology>, Task> action)
+        {
+            var selection = LayerSelectionProvider?.Invoke();
+            if (!allowed || selection == null)
+                return;
+
+            try
+            {
+                await action(selection.Layers);
+            }
+            catch (HoleDataException ex)
+            {
+                dialogs.Show(ex.Message, "Пластопересечение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Сущности об изменениях не уведомляют: гриды перечитывают значения (границы, колонка «Пласт»).
+            RequestGridRefresh();
+        }
+
+        private bool CanEditBoundaries()
+        {
+            var selection = LayerSelectionProvider?.Invoke();
+            return !ShowByHoleSeam
+                && loadedKey.BoreholeId != null
+                && loadedKey.InterbedId != null
+                && selection is { SortedByDepth: true, Layers.Count: > 0 };
+        }
+
+        private void RaiseSeamCommandsChanged()
+        {
+            AddHoleSeamCommand.RaiseCanExecuteChanged();
+            RedefineHoleSeamCommand.RaiseCanExecuteChanged();
         }
 
         private (int? BoreholeId, int? InterbedId) CurrentKey => (filter.BoreholeId, filter.InterbedId);

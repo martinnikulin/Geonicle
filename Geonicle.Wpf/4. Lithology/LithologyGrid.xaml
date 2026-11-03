@@ -14,13 +14,16 @@
     </UserControl.Resources>
 
     <!-- DataContext наследуется от экрана (LithologyViewModel). Колонки и настройки грида «Литология» описаны только здесь.
-         FilterCriteria задаёт модель экрана (слои выбранного пластопересечения, если стоит флажок). -->
+         FilterCriteria задаёт модель экрана (слои выбранного пластопересечения, если стоит флажок).
+         Несколько строк выбираются мышью с Shift/Ctrl; выбранные строки используют пункты контекстного меню (пластопересечения). -->
     <dxg:GridControl
         ItemsSource="{Binding Lithology}"
         FilterCriteria="{Binding LithologyFilterCriteria, Mode=OneWay}"
         ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
         AutoGenerateColumns="None"
+        SelectionMode="Row"
         behaviors:GridRefresh.RefreshOnSave="True"
+        behaviors:LithologyGridSelection.Enabled="True"
         RestoreStateKeyFieldName="LithologyId"
         RestoreStateOnSourceChange="True">
 

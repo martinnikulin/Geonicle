@@ -90,6 +90,14 @@ namespace Geonicle.Wpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Экран изменил строки в памяти (например, границы пластопересечения), а сущности об изменениях не уведомляют:
+        /// гриды перечитывают значения (так же, как после сохранения).
+        /// </summary>
+        public event EventHandler? RefreshRequested;
+
+        protected void RequestGridRefresh() => RefreshRequested?.Invoke(this, EventArgs.Empty);
+
         /// <summary>Данные успешно сохранены (гриды обновляют значения, например ID новых строк).</summary>
         public event EventHandler? Saved;
 

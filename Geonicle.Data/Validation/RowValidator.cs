@@ -12,6 +12,9 @@ namespace Geonicle.Validation
         string Describe(object entity);
 
         ValidationResult Validate(object entity);
+
+        /// <summary>Причины, по которым строку нельзя удалить (пусто — можно).</summary>
+        IEnumerable<string> ValidateDelete(object entity);
     }
 
     /// <summary>
@@ -23,10 +26,15 @@ namespace Geonicle.Validation
     {
         public virtual string Describe(T entity) => typeof(T).Name;
 
+        /// <summary>Причины, по которым строку нельзя удалить; по умолчанию удалять можно.</summary>
+        public virtual IEnumerable<string> ValidateDelete(T entity) => Array.Empty<string>();
+
         Type IRowValidator.EntityType => typeof(T);
 
         string IRowValidator.Describe(object entity) => Describe((T)entity);
 
         ValidationResult IRowValidator.Validate(object entity) => Validate((T)entity);
+
+        IEnumerable<string> IRowValidator.ValidateDelete(object entity) => ValidateDelete((T)entity);
     }
 }

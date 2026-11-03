@@ -3,7 +3,7 @@
 namespace Geonicle.Validation
 {
     /// <summary>
-    /// Проверка всех добавленных и изменённых сущностей контекста перед сохранением.
+    /// Проверка всех добавленных и изменённых сущностей контекста (и правил удаления для удаляемых) перед сохранением.
     /// Валидаторы (наследники RowValidator) находятся в сборке автоматически, регистрировать их не нужно.
     /// </summary>
     public static class EntityValidation
@@ -22,12 +22,18 @@ namespace Geonicle.Validation
             var errors = new List<string>();
             foreach (var entry in context.ChangeTracker.Entries())
             {
-                if (entry.State is not (EntityState.Added or EntityState.Modified))
+                if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
                     continue;
                 if (!Validators.TryGetValue(entry.Entity.GetType(), out var validator))
                     continue;
 
                 var description = validator.Describe(entry.Entity);
+                if (entry.State == EntityState.Deleted)
+                {
+                    errors.AddRange(validator.ValidateDelete(entry.Entity).Select(message => $"{description}: {message}"));
+                    continue;
+                }
+
                 foreach (var failure in validator.Validate(entry.Entity).Errors)
                     errors.Add($"{description}: {failure.ErrorMessage}");
             }

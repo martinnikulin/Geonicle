@@ -33,6 +33,14 @@ namespace Geonicle.Validation
                 .WithMessage("Страта не может быть отрицательной.");
         }
 
+        /// <summary>Пласт с кодом 0 — «пласт без названия»: к нему привязываются новые пластопересечения, он должен быть всегда.</summary>
+        public const int NoNameSeamId = 0;
+
+        public override IEnumerable<string> ValidateDelete(Seam seam) =>
+            seam.SeamId == NoNameSeamId
+                ? new[] { "Пласт без названия (код 0) удалять нельзя." }
+                : Array.Empty<string>();
+
         public override string Describe(Seam seam) =>
             string.IsNullOrWhiteSpace(seam.Description) ? "Пласт (без названия)" : $"Пласт «{seam.Description}»";
     }

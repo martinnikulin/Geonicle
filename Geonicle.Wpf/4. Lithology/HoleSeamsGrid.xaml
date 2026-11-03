@@ -14,7 +14,8 @@
     </UserControl.Resources>
 
     <!-- DataContext наследуется от экрана (LithologyViewModel). Колонки и настройки грида «Пластопересечения» описаны только здесь.
-         Пластопересечения в гриде не добавляются и не удаляются: в навигаторе только перемещение. -->
+         Пластопересечения не добавляются кнопкой навигатора: их создают пункты меню грида литологии (выбор строк литологии);
+         удаление стандартное, вместе с ним БД удаляет связи с пробами и композиты. -->
     <dxg:GridControl
         ItemsSource="{Binding HoleSeams}"
         SelectedItem="{Binding SelectedHoleSeam, Mode=TwoWay}"
@@ -76,7 +77,7 @@
         <dxg:GridControl.View>
             <dxg:TableView
                 menus:GridContextMenu.Menu="{Binding HoleSeamsMenu}"
-                DataNavigatorButtons="Navigation"
+                DataNavigatorButtons="Navigation, DeleteFocusedRow"
                 ShowGroupPanel="False"
                 ShowDataNavigator="True"
                 AutoWidth="True"

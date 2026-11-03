@@ -11,6 +11,22 @@ public class SeamValidatorTests
     private static Seam Seam() => new() { Description = "Пласт 1", ShortName = "П1", AdRoof = 10, AdBed = 10, DdaRoof = 10, DdaBed = 10 };
 
     [Fact]
+    public void Seam_without_a_name_code_0_cannot_be_deleted()
+    {
+        var seam = Seam();
+        seam.SeamId = 0;
+        Assert.Contains("Пласт без названия (код 0) удалять нельзя.", validator.ValidateDelete(seam));
+    }
+
+    [Fact]
+    public void Other_seams_can_be_deleted()
+    {
+        var seam = Seam();
+        seam.SeamId = 5;
+        Assert.Empty(validator.ValidateDelete(seam));
+    }
+
+    [Fact]
     public void Valid_seam_passes() => Assert.True(validator.Validate(Seam()).IsValid);
 
     [Fact]
