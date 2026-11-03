@@ -19,11 +19,11 @@ namespace Geonicle.Data.Services
             if (boreholeId == null || interbedId == null)
                 return new HoleData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>());
 
-            // Скважина с литологией загружается целиком: валидатор проверяет уникальность глубин по её коллекции.
-            await context.Boreholes
-                .Where(b => b.BoreholeId == boreholeId)
+            // Скважина с литологией загружается целиком: строки литологии грид добавляет в её коллекцию
+            // (скважина проставляется сама), а валидатор проверяет уникальность глубин по этой же коллекции.
+            var borehole = await context.Boreholes
                 .Include(b => b.Lithologies)
-                .LoadAsync();
+                .SingleOrDefaultAsync(b => b.BoreholeId == boreholeId);
             await context.SeamDefs
                 .Where(s => s.BoreholeId == boreholeId && s.InterbedId == interbedId)
                 .OrderBy(s => s.DepthFrom)
@@ -31,7 +31,7 @@ namespace Geonicle.Data.Services
 
             return new HoleData(
                 context.SeamDefs.Local.ToObservableCollection(),
-                context.Lithologies.Local.ToObservableCollection());
+                borehole == null ? new ObservableCollection<Lithology>() : (ObservableCollection<Lithology>)borehole.Lithologies);
         }
 
         public async Task<IReadOnlyList<LookupItem>> GetSeamLookupAsync()

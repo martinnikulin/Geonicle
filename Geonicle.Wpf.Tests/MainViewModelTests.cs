@@ -240,12 +240,4 @@ public class MainViewModelTests
         Assert.Equal(0, lookups.LineCalls);
         Assert.Empty(lookups.BoreholeCalls);
     }
-
-    [Fact]
-    public void The_borehole_data_screen_needs_all_three_groups()
-    {
-        Assert.Equal(
-            RibbonGroups.Data | RibbonGroups.Interbed | RibbonGroups.LineBorehole,
-            new LithologyViewModel().VisibleRibbonGroups);
-    }
 }

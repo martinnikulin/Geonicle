@@ -19,6 +19,7 @@ namespace Geonicle.Wpf
             collection.AddTransient<IBoreholesService, BoreholesService>();
             collection.AddTransient<ILinesService, LinesService>();
             collection.AddTransient<ISeamsService, SeamsService>();
+            collection.AddTransient<IHoleDataService, HoleDataService>();
 
             collection.AddSingleton<IUserDialogs, UserDialogs>();
             collection.AddSingleton<DataFilter>();

@@ -112,6 +112,20 @@ public class HoleDataServiceTests
     }
 
     [Fact]
+    public async Task Layer_added_to_the_list_gets_the_borehole_and_is_saved()
+    {
+        var (testDb, holeA, _) = Seed();
+        var service = new HoleDataService(testDb);
+        var data = await service.LoadAsync(holeA, 100);
+
+        data.Lithology.Add(new Lithology { DepthFrom = 20, DepthTo = 30 });   // BoreholeId не задан: подставляется коллекцией скважины
+        await service.SaveAsync();
+
+        using var db = testDb.CreateDbContext();
+        Assert.Equal(holeA, db.Lithologies.Single(l => l.DepthFrom == 20).BoreholeId);
+    }
+
+    [Fact]
     public async Task Invalid_draw_values_block_the_save()
     {
         var (testDb, holeA, _) = Seed();
