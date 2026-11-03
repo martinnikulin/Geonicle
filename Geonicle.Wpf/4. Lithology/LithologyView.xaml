@@ -17,7 +17,7 @@
     </dxmvvm:Interaction.Behaviors>
 
     <!-- Экран только размещает гриды: сверху «Пластопересечения», ниже вкладки «Литология» и «Анализы».
-         Флажок «по пластопересечениям» стоит в области справа от заголовков вкладок (ControlBoxPanelContent). -->
+         Флажок «по пластопересечениям» стоит в области справа от заголовков вкладок (ControlBoxRightTemplate). -->
     <dxlc:LayoutControl Orientation="Vertical" Padding="0">
         <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowVerticalSizing="True">
