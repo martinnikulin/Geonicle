@@ -28,12 +28,14 @@
 
         <dxlc:LayoutGroup>
             <dx:DXTabControl>
-                <dx:DXTabControl.ControlBoxPanelContent>
-                    <dxe:CheckEdit Content="Показать литологию и анализы по пластопересечениям"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0"
-                                   IsChecked="{Binding ShowByHoleSeam, Mode=TwoWay}" />
-                </dx:DXTabControl.ControlBoxPanelContent>
+                <dx:DXTabControl.ControlBoxRightTemplate>
+                    <DataTemplate>
+                        <CheckBox Content="Показать литологию и анализы по пластопересечениям"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,8,0"
+                                    IsChecked="{Binding ShowByHoleSeam, Mode=TwoWay}" />
+                    </DataTemplate>
+                </dx:DXTabControl.ControlBoxRightTemplate>
 
                 <dx:DXTabItem Header="Литология">
                     <grids:LithologyGrid />

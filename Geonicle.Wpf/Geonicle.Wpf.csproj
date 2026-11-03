@@ -11,6 +11,7 @@
     <ItemGroup>
         <PackageReference Include="DevExpress.Mvvm" Version="26.1.6" />
         <PackageReference Include="DevExpress.Wpf" Version="26.1.6" />
+        <PackageReference Include="DevExpress.Wpf.Core" Version="26.1.6" />
         <PackageReference Include="DevExpress.Wpf.ThemesLW" Version="26.1.6" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.13" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
