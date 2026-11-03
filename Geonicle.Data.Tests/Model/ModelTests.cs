@@ -31,6 +31,17 @@ public class ModelTests
         Assert.True(Model().FindEntityType(typeof(Part))!.FindProperty(nameof(Part.Description))!.IsNullable);
 
     [Fact]
+    public void Deleting_a_lithology_layer_never_cascades_to_seam_intersections()
+    {
+        var keys = Model().FindEntityType(typeof(SeamDef))!.GetForeignKeys()
+            .Where(fk => fk.PrincipalEntityType.ClrType == typeof(Lithology))
+            .ToList();
+
+        Assert.Equal(2, keys.Count);
+        Assert.All(keys, fk => Assert.Equal(DeleteBehavior.NoAction, fk.DeleteBehavior));
+    }
+
+    [Fact]
     public void Required_relationships_never_use_ClientSetNull()
     {
         var offenders = Model().GetEntityTypes()

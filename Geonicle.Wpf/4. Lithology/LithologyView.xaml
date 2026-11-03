@@ -1,8 +1,40 @@
 <UserControl
     x:Class="Geonicle.Wpf.Views.LithologyView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid>
-        <TextBlock Text="{Binding Title}" Margin="16" FontSize="20" />
-    </Grid>
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+    xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:grids="clr-namespace:Geonicle.Wpf.Views.Grids"
+    mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="530">
+
+    <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:EventToCommand Command="{Binding InitializeCommand}"
+                               EventName="Loaded"/>
+    </dxmvvm:Interaction.Behaviors>
+
+    <!-- Экран только размещает гриды: сверху «Пластопересечения», ниже флажок и вкладки «Литология» и «Анализы». -->
+    <dxlc:LayoutControl Orientation="Vertical" Padding="0">
+        <dxlc:LayoutGroup View="Tabs"
+                          dxlc:LayoutControl.AllowVerticalSizing="True">
+            <dxlc:LayoutGroup Header="Пластопересечения">
+                <grids:HoleSeamsGrid />
+            </dxlc:LayoutGroup>
+        </dxlc:LayoutGroup>
+
+        <dxlc:LayoutItem>
+            <dxe:CheckEdit Content="Показать литологию и анализы по пластопересечениям"
+                           IsChecked="{Binding ShowByHoleSeam, Mode=TwoWay}" />
+        </dxlc:LayoutItem>
+
+        <dxlc:LayoutGroup View="Tabs">
+            <dxlc:LayoutGroup Header="Литология">
+                <grids:LithologyGrid />
+            </dxlc:LayoutGroup>
+            <!-- Грид анализов добавим после описания колонок. -->
+            <dxlc:LayoutGroup Header="Анализы" />
+        </dxlc:LayoutGroup>
+    </dxlc:LayoutControl>
 </UserControl>

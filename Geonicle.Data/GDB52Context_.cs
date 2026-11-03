@@ -24,5 +24,14 @@ public partial class GDB52Context
             if (foreignKey.IsRequired && foreignKey.DeleteBehavior == DeleteBehavior.ClientSetNull)
                 foreignKey.DeleteBehavior = DeleteBehavior.Cascade;
         }
+
+        // Границы пластопересечения (DepthFromId, DepthToId) — внешние ключи на Lithology без каскада в БД.
+        // Каскад в трекере удалил бы загруженное пластопересечение вместе со слоем литологии, и БД это допустила бы.
+        // NoAction: EF пластопересечение не трогает, а БД отклоняет удаление слоя-границы ошибкой внешнего ключа.
+        foreach (var foreignKey in modelBuilder.Model.FindEntityType(typeof(SeamDef))!.GetForeignKeys()
+                     .Where(fk => fk.PrincipalEntityType.ClrType == typeof(Lithology)))
+        {
+            foreignKey.DeleteBehavior = DeleteBehavior.NoAction;
+        }
     }
 }
