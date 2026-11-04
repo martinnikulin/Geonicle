@@ -29,7 +29,7 @@ public class AssayConfiguration : IEntityTypeConfiguration<Assay>
             .HasColumnType("datetime");
         entity.Property(e => e.Val).HasMaxLength(200);
 
-        entity.HasOne(d => d.Sample).WithMany(p => p.Assays)
+        entity.HasOne(d => d.SampleDef).WithMany(p => p.Assays)
             .HasForeignKey(d => d.SampleId)
             .HasConstraintName("FK_Assays_Samples");
     }

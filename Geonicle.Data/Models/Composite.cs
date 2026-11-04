@@ -21,5 +21,5 @@ public partial class Composite
 
     public DateTime? DateModified { get; set; }
 
-    public virtual SeamDef HoleSeam { get; set; }
+    public virtual SeamDef SeamDef { get; set; }
 }

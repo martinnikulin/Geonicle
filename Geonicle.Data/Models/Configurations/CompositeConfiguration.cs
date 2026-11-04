@@ -19,7 +19,7 @@ public class CompositeConfiguration : IEntityTypeConfiguration<Composite>
             .HasDefaultValueSql("(getdate())", "DF_Composites_DateModified")
             .HasColumnType("datetime");
 
-        entity.HasOne(d => d.HoleSeam).WithMany(p => p.Composites)
+        entity.HasOne(d => d.SeamDef).WithMany(p => p.Composites)
             .HasForeignKey(d => d.HoleSeamId)
             .HasConstraintName("FK_Composites_SeamDefs");
     }

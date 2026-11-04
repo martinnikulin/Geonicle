@@ -603,7 +603,7 @@ public class SampleRowsTests
         await service.SaveAsync();
 
         using var db = setup.Db.CreateDbContext();
-        Assert.True(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamA && h.Sample.Nsample == "B").Accepted);
+        Assert.True(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamA && h.SampleDef.Nsample == "B").Accepted);
         Assert.False(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamB).Accepted);
     }
 
@@ -722,7 +722,7 @@ public class SampleRowsTests
         using (var db = setup.Db.CreateDbContext())   // «триггер»: связь C с A появилась, связь B с A исчезла
         {
             db.Hssamps.Add(new Hssamp { HoleSeamId = setup.SeamA, SampleId = sampleC.SampleId });
-            db.Hssamps.Remove(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamA && h.Sample.Nsample == "B"));
+            db.Hssamps.Remove(db.Hssamps.Single(h => h.HoleSeamId == setup.SeamA && h.SampleDef.Nsample == "B"));
             db.SaveChanges();
         }
         await service.RefreshSamplesAsync();

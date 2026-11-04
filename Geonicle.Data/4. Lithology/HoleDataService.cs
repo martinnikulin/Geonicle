@@ -205,7 +205,7 @@ namespace Geonicle.Data.Services
                 else
                 {
                     entry.State = EntityState.Detached;
-                    link.Sample?.Hssamps.Remove(link);
+                    link.SampleDef?.Hssamps.Remove(link);
                 }
             }
             await context.Hssamps.Where(h => ids.Contains(h.SampleId)).LoadAsync();   // связи, добавленные триггером

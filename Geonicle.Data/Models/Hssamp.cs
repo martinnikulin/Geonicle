@@ -21,7 +21,7 @@ public partial class Hssamp
 
     public DateTime DateModified { get; set; }
 
-    public virtual SeamDef HoleSeam { get; set; }
+    public virtual SeamDef SeamDef { get; set; }
 
-    public virtual SampleDef Sample { get; set; }
+    public virtual SampleDef SampleDef { get; set; }
 }

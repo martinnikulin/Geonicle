@@ -21,11 +21,11 @@ public class HssampConfiguration : IEntityTypeConfiguration<Hssamp>
             .HasColumnType("datetime");
         entity.Property(e => e.SampStage).HasDefaultValue(1, "DF_Acceptedsamps_sampstage");
 
-        entity.HasOne(d => d.HoleSeam).WithMany(p => p.Hssamps)
+        entity.HasOne(d => d.SeamDef).WithMany(p => p.Hssamps)
             .HasForeignKey(d => d.HoleSeamId)
             .HasConstraintName("Holeseams_Hssamps");
 
-        entity.HasOne(d => d.Sample).WithMany(p => p.Hssamps)
+        entity.HasOne(d => d.SampleDef).WithMany(p => p.Hssamps)
             .HasForeignKey(d => d.SampleId)
             .HasConstraintName("Samples_Hssamps");
     }

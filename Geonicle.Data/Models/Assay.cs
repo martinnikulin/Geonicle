@@ -19,5 +19,5 @@ public partial class Assay
 
     public DateTime DateModified { get; set; }
 
-    public virtual SampleDef Sample { get; set; }
+    public virtual SampleDef SampleDef { get; set; }
 }
