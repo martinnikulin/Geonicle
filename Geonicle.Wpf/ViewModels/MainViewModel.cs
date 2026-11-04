@@ -25,7 +25,7 @@ namespace Geonicle.Wpf.ViewModels
             RefreshCommand = new AsyncCommand(RefreshAsync);
         }
 
-        /// <summary>Фильтры на ленте (прослой, линия, скважина).</summary>
+        /// <summary>Фильтры на ленте (пласт, прослой, линия, скважина).</summary>
         public RibbonFilterViewModel Filters { get; }
 
         public AsyncCommand SaveCommand { get; }
@@ -44,6 +44,8 @@ namespace Geonicle.Wpf.ViewModels
         /// <summary>Общая группа «Данные» видна на всех экранах с гридами.</summary>
         public bool IsDataGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Data);
 
+        public bool IsSeamGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Seam);
+
         public bool IsInterbedGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Interbed);
 
         public bool IsLineBoreholeGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.LineBorehole);
@@ -51,6 +53,7 @@ namespace Geonicle.Wpf.ViewModels
         private void RaiseRibbonGroupsChanged()
         {
             RaisePropertyChanged(nameof(IsDataGroupVisible));
+            RaisePropertyChanged(nameof(IsSeamGroupVisible));
             RaisePropertyChanged(nameof(IsInterbedGroupVisible));
             RaisePropertyChanged(nameof(IsLineBoreholeGroupVisible));
         }
@@ -80,7 +83,7 @@ namespace Geonicle.Wpf.ViewModels
             (previous as IDisposable)?.Dispose();
 
             RaiseRibbonGroupsChanged();
-            await Filters.RefreshAsync(CurrentRibbonGroups & (RibbonGroups.Interbed | RibbonGroups.LineBorehole));
+            await Filters.RefreshAsync(CurrentRibbonGroups & (RibbonGroups.Seam | RibbonGroups.Interbed | RibbonGroups.LineBorehole));
             return true;
         }
 

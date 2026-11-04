@@ -34,6 +34,24 @@ public class FilterLookupServiceTests
     }
 
     [Fact]
+    public async Task Seams_are_the_actual_ones_ordered_by_N_with_the_description()
+    {
+        using (var db = testDb.CreateDbContext())
+        {
+            db.Seams.AddRange(
+                new Seam { Description = "Пласт 2", ShortName = "П2", N = 2, Actual = true },
+                new Seam { Description = "Пласт 1", ShortName = "П1", N = 1, Actual = true },
+                new Seam { Description = "Устарел", ShortName = "У", N = 0, Actual = false },
+                new Seam { Description = null, ShortName = "Без", N = 3, Actual = true });
+            db.SaveChanges();
+        }
+
+        var items = await Service().GetSeamsAsync();
+
+        Assert.Equal(new[] { "Пласт 1", "Пласт 2", "" }, items.Select(s => s.Description));
+    }
+
+    [Fact]
     public async Task Lines_are_ordered_by_N_and_carry_a_display_text()
     {
         using (var db = testDb.CreateDbContext())

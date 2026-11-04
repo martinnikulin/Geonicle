@@ -3,6 +3,9 @@ namespace Geonicle.Infrastructure
     /// <summary>Разделяющий прослой для списка на ленте: код (N × 100) и подпись «Прослой …».</summary>
     public record InterbedItem(int InterbedId, string InterbedName);
 
+    /// <summary>Пласт для списка на ленте (экран «Пластопересечения»).</summary>
+    public record SeamItem(int SeamId, string Description);
+
     /// <summary>Разведочная линия для списка на ленте.</summary>
     public record LineItem(int LineId, decimal N, string Description)
     {

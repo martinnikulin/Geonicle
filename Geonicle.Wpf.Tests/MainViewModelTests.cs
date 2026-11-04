@@ -22,6 +22,7 @@ public class MainViewModelTests
             .AddTransient<OtherScreen>()
             .AddTransient<InterbedScreen>()
             .AddTransient<AllGroupsScreen>()
+            .AddTransient<SeamScreen>()
             .BuildServiceProvider();
         var filters = new RibbonFilterViewModel(lookups, new DataFilter(), dialogs);
         main = new MainViewModel(provider, dialogs, filters);
@@ -178,6 +179,7 @@ public class MainViewModelTests
         Assert.False(main.IsDataGroupVisible);
         Assert.False(main.IsInterbedGroupVisible);
         Assert.False(main.IsLineBoreholeGroupVisible);
+        Assert.False(main.IsSeamGroupVisible);
     }
 
     [Fact]
@@ -204,6 +206,35 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public async Task The_seam_group_is_visible_only_on_screens_that_ask_for_it()
+    {
+        await main.NavigateAsync(typeof(SeamScreen));
+        Assert.True(main.IsDataGroupVisible && main.IsSeamGroupVisible && main.IsInterbedGroupVisible && !main.IsLineBoreholeGroupVisible);
+
+        await main.NavigateAsync(typeof(AllGroupsScreen));
+        Assert.False(main.IsSeamGroupVisible);
+    }
+
+    [Fact]
+    public async Task Seams_and_interbeds_are_loaded_for_the_seam_screen_and_the_first_seam_is_selected()
+    {
+        await main.NavigateAsync(typeof(SeamScreen));
+
+        Assert.Equal(1, lookups.SeamCalls);
+        Assert.Equal(1, lookups.InterbedCalls);
+        Assert.Equal(0, lookups.LineCalls);
+        Assert.Equal(5, main.Filters.SelectedSeamId);
+    }
+
+    [Fact]
+    public async Task Seams_are_not_loaded_for_other_screens()
+    {
+        await main.NavigateAsync(typeof(AllGroupsScreen));
+
+        Assert.Equal(0, lookups.SeamCalls);
+    }
+
+    [Fact]
     public async Task Navigation_notifies_the_ribbon_about_group_changes()
     {
         var changed = new List<string>();
@@ -214,6 +245,7 @@ public class MainViewModelTests
         Assert.Contains(nameof(MainViewModel.IsDataGroupVisible), changed);
         Assert.Contains(nameof(MainViewModel.IsInterbedGroupVisible), changed);
         Assert.Contains(nameof(MainViewModel.IsLineBoreholeGroupVisible), changed);
+        Assert.Contains(nameof(MainViewModel.IsSeamGroupVisible), changed);
     }
 
     [Fact]

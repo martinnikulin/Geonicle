@@ -15,6 +15,9 @@ namespace Geonicle.Wpf.Ribbon
         Interbed = 2,
 
         /// <summary>Списки «Разведочная линия», «Скважины» и флажок «Все скважины».</summary>
-        LineBorehole = 4
+        LineBorehole = 4,
+
+        /// <summary>Список «Пласт» (актуальные пласты).</summary>
+        Seam = 8
     }
 }

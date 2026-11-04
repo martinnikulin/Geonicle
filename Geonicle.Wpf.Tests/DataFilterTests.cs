@@ -11,6 +11,7 @@ public class DataFilterTests
         var filter = new DataFilter();
 
         Assert.Null(filter.InterbedId);
+        Assert.Null(filter.SeamId);
         Assert.Null(filter.LineId);
         Assert.Null(filter.BoreholeId);
         Assert.False(filter.AllBoreholes);
@@ -27,8 +28,9 @@ public class DataFilterTests
         filter.LineId = 10;
         filter.BoreholeId = 1;
         filter.AllBoreholes = true;
+        filter.SeamId = 5;
 
-        Assert.Equal(4, raised);
+        Assert.Equal(5, raised);
         Assert.Equal((100, 10, 1, true), (filter.InterbedId, filter.LineId, filter.BoreholeId, filter.AllBoreholes));
     }
 

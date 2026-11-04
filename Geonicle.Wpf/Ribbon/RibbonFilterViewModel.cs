@@ -10,7 +10,7 @@ using System.Windows;
 namespace Geonicle.Wpf.Ribbon
 {
     /// <summary>
-    /// Фильтры на ленте: «Разделяющий прослой», «Разведочная линия», «Скважины» и «Все скважины».
+    /// Фильтры на ленте: «Пласт», «Разделяющий прослой», «Разведочная линия», «Скважины» и «Все скважины».
     /// Хранит списки и выбранные значения и передаёт выбор в общий DataFilter.
     /// </summary>
     public class RibbonFilterViewModel : ViewModelBase
@@ -38,6 +38,12 @@ namespace Geonicle.Wpf.Ribbon
             private set => SetValue(value);
         }
 
+        public IReadOnlyList<SeamItem> Seams
+        {
+            get => GetValue<IReadOnlyList<SeamItem>>() ?? Array.Empty<SeamItem>();
+            private set => SetValue(value);
+        }
+
         public IReadOnlyList<LineItem> Lines
         {
             get => GetValue<IReadOnlyList<LineItem>>() ?? Array.Empty<LineItem>();
@@ -60,6 +66,19 @@ namespace Geonicle.Wpf.Ribbon
 
                 SetValue(value);
                 filter.InterbedId = value;
+            }
+        }
+
+        public int? SelectedSeamId
+        {
+            get => GetValue<int?>();
+            set
+            {
+                if (Equals(GetValue<int?>(), value))
+                    return;
+
+                SetValue(value);
+                filter.SeamId = value;
             }
         }
 
@@ -112,6 +131,13 @@ namespace Geonicle.Wpf.Ribbon
         {
             try
             {
+                if (groups.HasFlag(RibbonGroups.Seam))
+                {
+                    var seams = await lookups.GetSeamsAsync();
+                    Seams = seams;
+                    SelectedSeamId = KeepOrFirst(SelectedSeamId, seams.Select(s => s.SeamId));
+                }
+
                 if (groups.HasFlag(RibbonGroups.Interbed))
                 {
                     var interbeds = await lookups.GetInterbedsAsync();

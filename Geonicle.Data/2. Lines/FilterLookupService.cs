@@ -9,6 +9,9 @@ namespace Geonicle.Infrastructure
         /// <summary>Актуальные разделяющие прослои из CondDefs (раздел «Прослой»).</summary>
         Task<IReadOnlyList<InterbedItem>> GetInterbedsAsync();
 
+        /// <summary>Актуальные пласты (Seams.Actual) по порядку N.</summary>
+        Task<IReadOnlyList<SeamItem>> GetSeamsAsync();
+
         Task<IReadOnlyList<LineItem>> GetLinesAsync();
 
         /// <summary>
@@ -35,6 +38,18 @@ namespace Geonicle.Infrastructure
                 .Where(c => c.Section == "Прослой" && c.Actual)
                 .OrderBy(c => c.N)
                 .Select(c => new InterbedItem(c.N * 100, "Прослой " + c.CondName))
+                .ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<SeamItem>> GetSeamsAsync()
+        {
+            await using var db = await contextFactory.CreateDbContextAsync();
+            return await db.Seams
+                .AsNoTracking()
+                .Where(s => s.Actual)
+                .OrderBy(s => s.N)
+                .ThenBy(s => s.SeamId)
+                .Select(s => new SeamItem(s.SeamId, s.Description ?? ""))
                 .ToListAsync();
         }
 

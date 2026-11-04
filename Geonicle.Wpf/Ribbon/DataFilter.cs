@@ -9,6 +9,7 @@ namespace Geonicle.Wpf.Ribbon
     public class DataFilter
     {
         private int? interbedId;
+        private int? seamId;
         private int? lineId;
         private int? boreholeId;
         private bool allBoreholes;
@@ -18,6 +19,13 @@ namespace Geonicle.Wpf.Ribbon
         {
             get => interbedId;
             set => Set(ref interbedId, value);
+        }
+
+        /// <summary>Выбранный пласт (экран «Пластопересечения»); null — не выбран.</summary>
+        public int? SeamId
+        {
+            get => seamId;
+            set => Set(ref seamId, value);
         }
 
         /// <summary>Разведочная линия; null — не выбрана.</summary>

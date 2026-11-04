@@ -95,6 +95,17 @@ public class InterbedScreen : TestScreen
     public override RibbonGroups VisibleRibbonGroups => RibbonGroups.Data | RibbonGroups.Interbed;
 }
 
+/// <summary>Экран с группами «Пласт» и «Прослой» (как «Пластопересечения»).</summary>
+public class SeamScreen : TestScreen
+{
+    public SeamScreen(IUserDialogs dialogs) : base(dialogs)
+    {
+    }
+
+    public override RibbonGroups VisibleRibbonGroups =>
+        RibbonGroups.Data | RibbonGroups.Seam | RibbonGroups.Interbed;
+}
+
 /// <summary>Экран со всеми группами (как «Данные по скважинам»).</summary>
 public class AllGroupsScreen : TestScreen
 {
@@ -111,6 +122,8 @@ public sealed class FakeLookups : IFilterLookupService
 {
     public List<InterbedItem> Interbeds { get; } = new();
 
+    public List<SeamItem> Seams { get; } = new();
+
     public List<LineItem> Lines { get; } = new();
 
     /// <summary>Скважины по линиям: ключ — LineId.</summary>
@@ -122,6 +135,8 @@ public sealed class FakeLookups : IFilterLookupService
     public Exception Error { get; set; }
 
     public int InterbedCalls { get; private set; }
+
+    public int SeamCalls { get; private set; }
 
     public int LineCalls { get; private set; }
 
@@ -135,6 +150,13 @@ public sealed class FakeLookups : IFilterLookupService
         InterbedCalls++;
         if (Error != null) throw Error;
         return Task.FromResult<IReadOnlyList<InterbedItem>>(Interbeds.ToList());
+    }
+
+    public Task<IReadOnlyList<SeamItem>> GetSeamsAsync()
+    {
+        SeamCalls++;
+        if (Error != null) throw Error;
+        return Task.FromResult<IReadOnlyList<SeamItem>>(Seams.ToList());
     }
 
     public Task<IReadOnlyList<LineItem>> GetLinesAsync()
@@ -161,6 +183,7 @@ public sealed class FakeLookups : IFilterLookupService
     {
         var fake = new FakeLookups();
         fake.Interbeds.AddRange(new[] { new InterbedItem(100, "Прослой 0,3 м"), new InterbedItem(200, "Прослой 0,5 м") });
+        fake.Seams.AddRange(new[] { new SeamItem(5, "Пласт 1"), new SeamItem(6, "Пласт 2") });
         fake.Lines.AddRange(new[] { new LineItem(10, 1, "Л1"), new LineItem(20, 2, "Л2") });
         fake.BoreholesByLine[10] = new List<LineBoreholeItem> { new(1, 1, "A"), new(2, 2, "B") };
         fake.BoreholesByLine[20] = new List<LineBoreholeItem> { new(3, 1, "C") };

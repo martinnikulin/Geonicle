@@ -28,6 +28,41 @@ public class RibbonFilterViewModelTests
     }
 
     [Fact]
+    public async Task Seams_are_loaded_and_the_first_one_is_selected()
+    {
+        await ribbon.RefreshAsync(RibbonGroups.Seam);
+
+        Assert.Equal(new[] { 5, 6 }, ribbon.Seams.Select(s => s.SeamId));
+        Assert.Equal(5, ribbon.SelectedSeamId);
+        Assert.Equal(5, filter.SeamId);
+        Assert.Equal(0, lookups.InterbedCalls);   // другие группы не загружаются
+    }
+
+    [Fact]
+    public async Task Choosing_a_seam_updates_the_shared_filter()
+    {
+        await ribbon.RefreshAsync(RibbonGroups.Seam);
+
+        ribbon.SelectedSeamId = 6;
+
+        Assert.Equal(6, filter.SeamId);
+    }
+
+    [Fact]
+    public async Task Seam_refresh_keeps_the_selection_that_still_exists_and_otherwise_selects_the_first()
+    {
+        await ribbon.RefreshAsync(RibbonGroups.Seam);
+        ribbon.SelectedSeamId = 6;
+
+        await ribbon.RefreshAsync(RibbonGroups.Seam);
+        Assert.Equal(6, ribbon.SelectedSeamId);
+
+        lookups.Seams.RemoveAt(1);
+        await ribbon.RefreshAsync(RibbonGroups.Seam);
+        Assert.Equal(5, ribbon.SelectedSeamId);
+    }
+
+    [Fact]
     public async Task Lines_and_boreholes_are_loaded_and_the_first_items_are_selected()
     {
         await ribbon.RefreshAsync(RibbonGroups.LineBorehole);

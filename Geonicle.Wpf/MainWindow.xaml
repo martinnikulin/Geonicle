@@ -66,6 +66,37 @@
                                            />
                     </dxr:RibbonPageGroup>
 
+                    <!-- Видна на экране «Пластопересечения»: актуальные пласты (список приходит отсортированным по N). -->
+                    <dxr:RibbonPageGroup Caption="Пласт" IsVisible="{Binding IsSeamGroupVisible}">
+                        <dxb:BarEditItem x:Name="seamItem"
+                                         Content="Пласт"
+                                         EditWidth="120"
+                                         EditValue="{Binding Filters.SelectedSeamId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxg:LookUpEditSettings
+                                    ItemsSource="{Binding Data.Filters.Seams, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="SeamId"
+                                    DisplayMember="Description"
+                                    AutoPopulateColumns="False"
+                                    IsTextEditable="False">
+                                    <dxg:LookUpEditSettings.PopupContentTemplate>
+                                        <ControlTemplate>
+                                            <dxg:GridControl x:Name="PART_GridControl" ShowBorder="False" AutoGenerateColumns="None">
+                                                <dxg:GridControl.Columns>
+                                                    <dxg:GridColumn FieldName="SeamId" Header="ID" Width="70" />
+                                                    <dxg:GridColumn FieldName="Description" Header="Название" Width="200" />
+                                                </dxg:GridControl.Columns>
+                                                <dxg:GridControl.View>
+                                                    <dxg:TableView AutoWidth="True" ShowColumnHeaders="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
+                                                </dxg:GridControl.View>
+                                            </dxg:GridControl>
+                                        </ControlTemplate>
+                                    </dxg:LookUpEditSettings.PopupContentTemplate>
+                                </dxg:LookUpEditSettings>
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+                    </dxr:RibbonPageGroup>
+
                     <!-- Видна на экранах, где данные фильтруются по разделяющему прослою. -->
                     <dxr:RibbonPageGroup Caption="Прослой" IsVisible="{Binding IsInterbedGroupVisible}">
                         <dxb:BarStaticItem x:Name="interbedCaptionItem" Content="Разделяющий прослой" />
