@@ -12,7 +12,7 @@ public class DisplayNameEnumConverterTests
     [InlineData(KbType.Б, "Б")]
     [InlineData(KbType.БезКерна, "Б(без керна)")]
     [InlineData(KbType.К, "К")]
-    [InlineData(KbType.КБ, "К+Б")]
+    [InlineData(KbType.КБ, "К + Б")]
     [InlineData(KbType.БК, "Б(К)")]
     [InlineData(KbType.БНК, "Б(НК)")]
     [InlineData(KbType.НетДанных, "Нет данных")]
@@ -37,13 +37,13 @@ public class DisplayNameEnumConverterTests
     {
         var error = Assert.Throws<InvalidOperationException>(() => DisplayNameEnumConverter<KbType>.Read(text));
         Assert.Contains("Неизвестное значение", error.Message);
-        Assert.Contains("К+Б", error.Message);
+        Assert.Contains("К + Б", error.Message);
     }
 
     [Fact]
     public void Surrounding_spaces_in_the_database_text_are_ignored()
     {
-        Assert.Equal(KbType.КБ, DisplayNameEnumConverter<KbType>.Read(" К+Б "));
+        Assert.Equal(KbType.КБ, DisplayNameEnumConverter<KbType>.Read(" К + Б "));
     }
 
     [Fact]

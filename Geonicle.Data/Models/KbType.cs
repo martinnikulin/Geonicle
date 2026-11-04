@@ -9,15 +9,22 @@ namespace Data.Models;
 public enum KbType
 {
     Б,
+
     [Display(Name = "Б(без керна)")]
     БезКерна,
+
     К,
-    [Display(Name = "К+Б")]
+
+    [Display(Name = "К + Б")]
     КБ,
+
     [Display(Name = "Б(К)")]
     БК,
+
     [Display(Name = "Б(НК)")]
     БНК,
+
     [Display(Name = "Нет данных")]
     НетДанных,
 }
+
