@@ -1,0 +1,71 @@
+<UserControl
+    x:Class="Geonicle.Wpf.Views.Grids.SeamSamplesGrid"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:models="clr-namespace:Data.Models;assembly=Geonicle.Data"
+    xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
+
+    <UserControl.Resources>
+        <!-- EditSettings колонок не видят DataContext, поэтому справочники берём через прокси. -->
+        <helpers:BindingProxy x:Key="ViewModelProxy" Data="{Binding}" />
+    </UserControl.Resources>
+
+    <!-- DataContext наследуется от экрана (SeamIntersectionsViewModel). Колонки и настройки грида «Пробы» описаны только здесь.
+         Строки — SampleRow: правятся проба (SampleDef) и «Принято» (HSSamps.Accepted выбранного пластопересечения); колонки Ad
+         только для чтения (их считает представление Samples). Пробы не добавляются и не удаляются. Двойной щелчок по
+         нередактируемой ячейке открывает окно «Анализы» (код в SeamSamplesGrid.xaml.cs). -->
+    <dxg:GridControl
+        ItemsSource="{Binding Samples}"
+        ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
+        AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
+        RestoreStateKeyFieldName="SampleId"
+        RestoreStateOnSourceChange="True">
+
+        <dxg:GridControl.Columns>
+            <dxg:GridColumn FieldName="N" Header="N" ReadOnly="True" />
+            <dxg:GridColumn FieldName="SampleId" Header="ID" ReadOnly="True" />
+            <dxg:GridColumn FieldName="Accepted" Header="Принято" />
+            <dxg:GridColumn FieldName="Bad" Header="Брак" />
+            <dxg:GridColumn FieldName="Nsample" Header="Номер пробы" ReadOnly="True" />
+            <dxg:GridColumn FieldName="DepthFrom" Header="От" />
+            <dxg:GridColumn FieldName="DepthTo" Header="До" />
+            <dxg:GridColumn FieldName="Ad" Header="Ad" ReadOnly="True" />
+            <dxg:GridColumn FieldName="AdFloat" Header="Ad флот" ReadOnly="True" />
+            <dxg:GridColumn FieldName="AdGbs" Header="Ad гбс" ReadOnly="True" />
+            <dxg:GridColumn FieldName="AdGeophys" Header="Ad геофиз" ReadOnly="True" />
+            <dxg:GridColumn FieldName="AdSeam" Header="Ad пласт" ReadOnly="True" />
+            <dxg:GridColumn FieldName="AdIndex" Header="Притято по">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{Binding Data.AdIndexLookup, Source={StaticResource ViewModelProxy}}"
+                        ValueMember="Id"
+                        DisplayMember="Name"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+        </dxg:GridControl.Columns>
+
+        <dxg:GridControl.TotalSummary>
+            <dxg:GridSummaryItem Alignment="Left" SummaryType="Count" />
+        </dxg:GridControl.TotalSummary>
+
+        <dxg:GridControl.View>
+            <dxg:TableView
+                menus:GridContextMenu.Menu="{Binding SamplesMenu}"
+                DataNavigatorButtons="Navigation"
+                ShowGroupPanel="False"
+                ShowDataNavigator="True"
+                AutoWidth="True"
+                IncrementalSearchMode="Enabled"
+                UseOnlyCurrentColumnInIncrementalSearch="True"
+                IncrementalSearchClearDelay="1500"
+                EditorShowMode="MouseDownFocused"
+                RowDoubleClick="View_RowDoubleClick" />
+        </dxg:GridControl.View>
+    </dxg:GridControl>
+</UserControl>

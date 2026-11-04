@@ -1,0 +1,89 @@
+<UserControl
+    x:Class="Geonicle.Wpf.Views.Grids.SeamIntersectionsGrid"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:models="clr-namespace:Data.Models;assembly=Geonicle.Data"
+    xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
+
+    <UserControl.Resources>
+        <!-- EditSettings колонок не видят DataContext, поэтому справочники берём через прокси. -->
+        <helpers:BindingProxy x:Key="ViewModelProxy" Data="{Binding}" />
+    </UserControl.Resources>
+
+    <!-- DataContext наследуется от экрана (SeamIntersectionsViewModel). Колонки и настройки грида «Пластопересечения» описаны только здесь.
+         «Скв», «От» и «До» только для чтения (границы задаёт литология; пластопересечения создаются в «Данных по скважинам»),
+         строки не добавляются и не удаляются: в навигаторе только перемещение. -->
+    <dxg:GridControl
+        ItemsSource="{Binding HoleSeams}"
+        SelectedItem="{Binding SelectedHoleSeam, Mode=TwoWay}"
+        ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
+        AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
+        RestoreStateKeyFieldName="HoleSeamId"
+        RestoreStateOnSourceChange="True">
+
+        <dxg:GridControl.Columns>
+            <dxg:GridColumn FieldName="HoleSeamId" Header="ID" ReadOnly="True" />
+            <dxg:GridColumn FieldName="Borehole.HoleName" Header="Скв" ReadOnly="True" />
+            <dxg:GridColumn FieldName="Comments" Header="Комментарии" />
+            <dxg:GridColumn FieldName="Kb" Header="КБ">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{dxe:EnumItemsSource EnumType={x:Type models:KbType}}"
+                        AllowNullInput="True"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+            <dxg:GridColumn FieldName="DepthFrom" Header="От" ReadOnly="True" />
+            <dxg:GridColumn FieldName="DepthTo" Header="До" ReadOnly="True" />
+            <dxg:GridColumn FieldName="CoalType" Header="Тип">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{Binding Data.CoalTypeLookup, Source={StaticResource ViewModelProxy}}"
+                        ValueMember="Id"
+                        DisplayMember="Name"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+            <dxg:GridColumn FieldName="CoalGrade" Header="Марка">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{Binding Data.CoalGradeLookup, Source={StaticResource ViewModelProxy}}"
+                        ValueMember="Id"
+                        DisplayMember="Name"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+            <dxg:GridColumn FieldName="AdCoal" Header="Ad угля" />
+            <dxg:GridColumn FieldName="AdFull" Header="Ad засор." />
+            <dxg:GridColumn FieldName="AdR" Header="" />
+            <dxg:GridColumn FieldName="ThCoal" Header="М угля" />
+            <dxg:GridColumn FieldName="ThFull" Header="М засор." />
+            <dxg:GridColumn FieldName="ThR" Header="" />
+            <dxg:GridColumn FieldName="OnMap" Header="В подсчёт" />
+            <dxg:GridColumn FieldName="Stat" Header="Стат" />
+            <dxg:GridColumn FieldName="Lock" Header="Lock" />
+        </dxg:GridControl.Columns>
+
+        <dxg:GridControl.TotalSummary>
+            <dxg:GridSummaryItem Alignment="Left" SummaryType="Count" />
+        </dxg:GridControl.TotalSummary>
+
+        <dxg:GridControl.View>
+            <dxg:TableView
+                menus:GridContextMenu.Menu="{Binding HoleSeamsMenu}"
+                DataNavigatorButtons="Navigation"
+                ShowGroupPanel="False"
+                ShowDataNavigator="True"
+                AutoWidth="True"
+                IncrementalSearchMode="Enabled"
+                UseOnlyCurrentColumnInIncrementalSearch="True"
+                IncrementalSearchClearDelay="1500"
+                EditorShowMode="MouseDownFocused" />
+        </dxg:GridControl.View>
+    </dxg:GridControl>
+</UserControl>

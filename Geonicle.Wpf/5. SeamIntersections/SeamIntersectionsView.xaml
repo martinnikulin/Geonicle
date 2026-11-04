@@ -1,0 +1,51 @@
+<UserControl
+    x:Class="Geonicle.Wpf.Views.SeamIntersectionsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+    xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+    xmlns:grids="clr-namespace:Geonicle.Wpf.Views.Grids"
+    mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="530">
+
+    <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:EventToCommand Command="{Binding InitializeCommand}"
+                               EventName="Loaded"/>
+    </dxmvvm:Interaction.Behaviors>
+
+    <!-- Экран только размещает гриды: сверху «Пластопересечения» и «Средние», снизу «Литология» и «Анализы» (пробы).
+         Колонки и настройки каждого грида — в его файле в папке экрана. -->
+    <dxlc:LayoutControl Orientation="Vertical" Padding="0">
+        <dxlc:LayoutGroup Orientation="Horizontal"
+                          dxlc:LayoutControl.AllowVerticalSizing="True">
+            <dxlc:LayoutGroup View="Tabs"
+                              dxlc:LayoutControl.AllowHorizontalSizing="True">
+                <dxlc:LayoutGroup Header="Пластопересечения">
+                    <grids:SeamIntersectionsGrid />
+                </dxlc:LayoutGroup>
+            </dxlc:LayoutGroup>
+
+            <dxlc:LayoutGroup View="Tabs">
+                <dxlc:LayoutGroup Header="Средние">
+                    <grids:AveragesGrid />
+                </dxlc:LayoutGroup>
+            </dxlc:LayoutGroup>
+        </dxlc:LayoutGroup>
+
+        <dxlc:LayoutGroup Orientation="Horizontal">
+            <dxlc:LayoutGroup View="Tabs"
+                              dxlc:LayoutControl.AllowHorizontalSizing="True">
+                <dxlc:LayoutGroup Header="Литология">
+                    <grids:SeamLithologyGrid />
+                </dxlc:LayoutGroup>
+            </dxlc:LayoutGroup>
+
+            <dxlc:LayoutGroup View="Tabs">
+                <dxlc:LayoutGroup Header="Анализы">
+                    <grids:SeamSamplesGrid />
+                </dxlc:LayoutGroup>
+            </dxlc:LayoutGroup>
+        </dxlc:LayoutGroup>
+    </dxlc:LayoutControl>
+</UserControl>

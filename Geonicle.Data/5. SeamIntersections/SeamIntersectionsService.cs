@@ -51,7 +51,9 @@ namespace Geonicle.Data.Services
             var averages = context.Averages.Local.ToObservableCollection();
             averages.CollectionChanged += Averages_CollectionChanged;
 
-            return new SeamIntersectionsData(context.SeamDefs.Local.ToObservableCollection(), averages);
+            // Пластопересечения здесь не добавляются и не удаляются: список — копия, а не живое представление контекста,
+            // поэтому случайно добавленная строка (например, кнопкой ленты) в базу не попадёт.
+            return new SeamIntersectionsData(new ObservableCollection<SeamDef>(context.SeamDefs.Local), averages);
         }
 
         /// <summary>Строка добавлена в грид средних: пласт и прослой берутся с ленты (в самой строке их нет).</summary>

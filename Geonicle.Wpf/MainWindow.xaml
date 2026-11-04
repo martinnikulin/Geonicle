@@ -29,6 +29,9 @@
         <DataTemplate DataType="{x:Type vm:BoreholeDataViewModel}">
             <views:BoreholeDataView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SeamIntersectionsViewModel}">
+            <views:SeamIntersectionsView />
+        </DataTemplate>
     </dx:ThemedWindow.Resources>
 
 
@@ -202,7 +205,7 @@
                 <dxa:AccordionItem Header="Данные по скважинам" Tag="{x:Type vm:BoreholeDataViewModel}" />
             </dxa:AccordionItem>
             <dxa:AccordionItem Header="Подсчет запасов">
-                <dxa:AccordionItem Header="Пластопересечения" />
+                <dxa:AccordionItem Header="Пластопересечения" Tag="{x:Type vm:SeamIntersectionsViewModel}" />
                 <dxa:AccordionItem Header="Блоки запасов" />
             </dxa:AccordionItem>
             <dxa:AccordionItem Header="Запросы" />
