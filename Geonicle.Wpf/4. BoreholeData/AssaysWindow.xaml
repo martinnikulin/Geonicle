@@ -4,45 +4,83 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
     Title="{Binding Title}"
-    Width="520" Height="640"
+    Width="760" Height="640"
     WindowStartupLocation="CenterOwner"
     ShowInTaskbar="False">
 
     <!-- Окно «Анализы» пробы (немодальное). Значения правятся только в колонке «Значение»;
          «ОК» записывает анализы в БД и закрывает окно, «Отмена» закрывает без сохранения. -->
     <Grid Margin="8">
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        </Grid.Resources>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Сразу сгруппировано по группе (GroupIndex="0"); группа сортируется по порядку группы (GroupN),
-             показатели внутри группы — по номеру (N). Другие колонки можно группировать на панели группировки. -->
-        <dxg:GridControl Grid.Row="0"
-                         ItemsSource="{Binding Rows}"
-                         AutoGenerateColumns="None"
-                         AutoExpandAllGroups="True">
-            <dxg:GridControl.Columns>
-                <dxg:GridColumn FieldName="GroupName" Header="Группа" ReadOnly="True"
-                                GroupIndex="0"
-                                SortFieldName="GroupN" SortIndex="0" SortOrder="Ascending" />
-                <dxg:GridColumn FieldName="N" Header="№" ReadOnly="True"
-                                SortIndex="1" SortOrder="Ascending" />
-                <dxg:GridColumn FieldName="Description" Header="Параметр" ReadOnly="True" />
-                <dxg:GridColumn FieldName="Val" Header="Значение" />
-            </dxg:GridControl.Columns>
+        <dxe:CheckEdit Grid.Row="0"
+                       Content="По группам"
+                       Margin="0,0,0,8"
+                       IsChecked="{Binding GroupByGroups, Mode=TwoWay}" />
 
-            <dxg:GridControl.View>
-                <dxg:TableView ShowGroupPanel="True"
-                               ShowDataNavigator="False"
-                               AutoWidth="True"
-                               AllowSorting="False"
-                               EditorShowMode="MouseDownFocused" />
-            </dxg:GridControl.View>
-        </dxg:GridControl>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <!-- Табы групп слева (только заголовки): выбор таба включает фильтр единственного грида справа по группе.
+                 Табы показываются только при включённом флажке «По группам». -->
+            <dx:DXTabControl Grid.Column="0"
+                             Margin="0,0,8,0"
+                             ItemsSource="{Binding Groups}"
+                             SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                             Visibility="{Binding GroupByGroups, Converter={StaticResource BoolToVisibility}}">
+                <dx:DXTabControl.View>
+                    <dx:TabControlMultiLineView HeaderLocation="Left" />
+                </dx:DXTabControl.View>
+                <dx:DXTabControl.ItemHeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding GroupName}" TextWrapping="Wrap" MaxWidth="150" />
+                    </DataTemplate>
+                </dx:DXTabControl.ItemHeaderTemplate>
+                <!-- Содержимого у табов нет: данные показывает общий грид. -->
+                <dx:DXTabControl.ItemTemplate>
+                    <DataTemplate />
+                </dx:DXTabControl.ItemTemplate>
+            </dx:DXTabControl>
+
+            <!-- Колонка «Группа» скрыта и нужна только для порядка: группы по порядку группы (GroupN), показатели — по номеру (N).
+                 FilterCriteria задаёт модель (показатели выбранной группы), панель фильтра скрыта. -->
+            <dxg:GridControl Grid.Column="1"
+                             ItemsSource="{Binding Rows}"
+                             FilterCriteria="{Binding FilterCriteria, Mode=OneWay}"
+                             AutoGenerateColumns="None">
+                <dxg:GridControl.Columns>
+                    <dxg:GridColumn FieldName="GroupName" Header="Группа" ReadOnly="True" Visible="False"
+                                    SortFieldName="GroupN" SortIndex="0" SortOrder="Ascending" />
+                    <dxg:GridColumn FieldName="N" Header="№" ReadOnly="True"
+                                    SortIndex="1" SortOrder="Ascending" />
+                    <dxg:GridColumn FieldName="Description" Header="Параметр" ReadOnly="True" />
+                    <dxg:GridColumn FieldName="Val" Header="Значение" />
+                </dxg:GridControl.Columns>
+
+                <dxg:GridControl.View>
+                    <dxg:TableView ShowGroupPanel="False"
+                                   ShowDataNavigator="False"
+                                   AutoWidth="True"
+                                   AllowSorting="False"
+                                   ShowFilterPanelMode="Never"
+                                   EditorShowMode="MouseDownFocused" />
+                </dxg:GridControl.View>
+            </dxg:GridControl>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Content="ОК" Width="90" IsDefault="True" Command="{Binding OkCommand}" />
             <Button Content="Отмена" Width="90" Margin="8,0,0,0" IsCancel="True" Command="{Binding CancelCommand}" />
         </StackPanel>

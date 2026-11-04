@@ -1,4 +1,5 @@
 using System.Windows;
+using DevExpress.Data.Filtering;
 using Geonicle.Data.Services;
 using Geonicle.Validation;
 using Geonicle.Wpf.ViewModels;
@@ -42,6 +43,22 @@ public class AssaysViewModelTests
         service.Rows.Add(new AssayRow(2, 2, "Ad флот., %", 1, "Технический анализ", 1, null));
     }
 
+    private void AddSecondGroup()
+    {
+        // Группа «Элементный состав» идёт после «Технического анализа» по порядку групп, хотя её строка в списке раньше.
+        service.Rows.Insert(0, new AssayRow(9, 1, "Cl, %", 2, "Элементный состав", 2, "0,1"));
+    }
+
+    /// <summary>Условие грида как (поле, значение): так тесты не зависят от текстового вида условия.</summary>
+    private static (string Field, int Value) GroupCondition(CriteriaOperator criteria)
+    {
+        var binary = Assert.IsType<BinaryOperator>(criteria);
+        Assert.Equal(BinaryOperatorType.Equal, binary.OperatorType);
+        return (
+            Assert.IsType<OperandProperty>(binary.LeftOperand).PropertyName,
+            Convert.ToInt32(Assert.IsType<OperandValue>(binary.RightOperand).Value));
+    }
+
     private AssaysViewModel Window() => new(service, dialogs);
 
     [Fact]
@@ -53,6 +70,90 @@ public class AssaysViewModelTests
 
         Assert.Equal("Анализы: проба № 1", window.Title);
         Assert.Equal(new[] { 1, 2 }, window.Rows.Select(r => r.VarId));
+    }
+
+    [Fact]
+    public async Task Group_tabs_follow_the_group_order_and_the_first_group_is_selected()
+    {
+        AddSecondGroup();
+        var window = Window();
+
+        await window.InitializeAsync(42, "t");
+
+        Assert.Equal(new[] { "Технический анализ", "Элементный состав" }, window.Groups.Select(g => g.GroupName));
+        Assert.Equal(1, window.SelectedGroup.GroupId);
+        Assert.Equal(("GroupId", 1), GroupCondition(window.FilterCriteria));
+    }
+
+    [Fact]
+    public async Task Grouping_is_on_by_default_like_in_the_original_form()
+    {
+        var window = Window();
+        await window.InitializeAsync(42, "t");
+
+        Assert.True(window.GroupByGroups);
+        Assert.NotNull(window.FilterCriteria);
+    }
+
+    [Fact]
+    public async Task Selecting_a_tab_filters_the_grid_by_that_group()
+    {
+        AddSecondGroup();
+        var window = Window();
+        await window.InitializeAsync(42, "t");
+        var changed = new List<string>();
+        window.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        window.SelectedGroup = window.Groups[1];
+
+        Assert.Equal(("GroupId", 2), GroupCondition(window.FilterCriteria));
+        Assert.Contains(nameof(AssaysViewModel.FilterCriteria), changed);
+    }
+
+    [Fact]
+    public async Task Switching_the_by_groups_flag_off_shows_all_indicators_and_on_restores_the_group_filter()
+    {
+        AddSecondGroup();
+        var window = Window();
+        await window.InitializeAsync(42, "t");
+        window.SelectedGroup = window.Groups[1];
+
+        window.GroupByGroups = false;
+        Assert.Null(window.FilterCriteria);
+
+        window.GroupByGroups = true;
+        Assert.Equal(("GroupId", 2), GroupCondition(window.FilterCriteria));   // выбранный таб сохранился
+    }
+
+    [Fact]
+    public async Task Edits_survive_switching_tabs_and_ok_saves_every_group()
+    {
+        AddSecondGroup();
+        var window = Window();
+        await window.InitializeAsync(42, "t");
+        window.Rows.Single(r => r.VarId == 1).Val = "30";
+        window.SelectedGroup = window.Groups[1];
+        window.Rows.Single(r => r.VarId == 9).Val = "0,2";
+        window.SelectedGroup = window.Groups[0];
+
+        await window.OkAsync();
+
+        var saved = Assert.Single(service.SavedCalls).Rows;
+        Assert.Equal("30", saved.Single(r => r.VarId == 1).Val);
+        Assert.Equal("0,2", saved.Single(r => r.VarId == 9).Val);
+    }
+
+    [Fact]
+    public async Task Without_indicators_there_are_no_tabs_and_no_filter()
+    {
+        service.Rows.Clear();
+        var window = Window();
+
+        await window.InitializeAsync(42, "t");
+
+        Assert.Empty(window.Groups);
+        Assert.Null(window.SelectedGroup);
+        Assert.Null(window.FilterCriteria);
     }
 
     [Fact]

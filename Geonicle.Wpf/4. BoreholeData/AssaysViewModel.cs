@@ -1,16 +1,20 @@
+using DevExpress.Data.Filtering;
 using DevExpress.Mvvm;
 using Geonicle.Data.Services;
 using Geonicle.Validation;
 using Geonicle.Wpf.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
 namespace Geonicle.Wpf.ViewModels
 {
     /// <summary>
-    /// Окно «Анализы» пробы: актуальные показатели по группам (группировка — в самом гриде), редактируется только значение.
+    /// Окно «Анализы» пробы: актуальные показатели, редактируется только значение. Группы показателей — табы слева
+    /// (флажок «По группам»); таб включает фильтр одного грида по группе, без флажка показываются все показатели.
     /// «ОК» записывает изменения в БД сразу (отдельно от кнопки «Сохранить» экрана) и закрывает окно,
     /// «Отмена» закрывает без сохранения.
     /// </summary>
@@ -20,6 +24,7 @@ namespace Geonicle.Wpf.ViewModels
         private readonly IUserDialogs dialogs;
         private int sampleId;
         private bool isLoaded;
+        private bool groupByGroups = true;
 
         public AssaysViewModel(IAssayService service, IUserDialogs dialogs)
         {
@@ -55,13 +60,62 @@ namespace Geonicle.Wpf.ViewModels
             private set => SetValue(value);
         }
 
+        /// <summary>Группы показателей по порядку групп (AssayGroups.N): по табу на группу.</summary>
+        public IReadOnlyList<AssayGroupItem> Groups
+        {
+            get => GetValue<IReadOnlyList<AssayGroupItem>?>() ?? new List<AssayGroupItem>();
+            private set => SetValue(value);
+        }
+
+        /// <summary>Выбранный таб (группа): грид показывает только её показатели.</summary>
+        public AssayGroupItem? SelectedGroup
+        {
+            get => GetValue<AssayGroupItem?>();
+            set
+            {
+                SetValue(value);
+                UpdateFilter();
+            }
+        }
+
+        /// <summary>Флажок «По группам»: включён — табы групп и фильтр по выбранной группе; выключен — все показатели.</summary>
+        public bool GroupByGroups
+        {
+            get => groupByGroups;
+            set
+            {
+                if (groupByGroups == value)
+                    return;
+                groupByGroups = value;
+                RaisePropertyChanged(nameof(GroupByGroups));
+                UpdateFilter();
+            }
+        }
+
+        /// <summary>Условие грида: показатели выбранной группы; null — без условия (все показатели).</summary>
+        public CriteriaOperator? FilterCriteria
+        {
+            get => GetValue<CriteriaOperator?>();
+            private set => SetValue(value);
+        }
+
+        private void UpdateFilter() =>
+            FilterCriteria = GroupByGroups && SelectedGroup != null ? new BinaryOperator("GroupId", SelectedGroup.GroupId) : null;
+
         public async Task InitializeAsync(int sampleId, string title)
         {
             this.sampleId = sampleId;
             Title = title;
             try
             {
-                Rows = new ObservableCollection<AssayRow>(await service.LoadAsync(sampleId));
+                var rows = await service.LoadAsync(sampleId);
+                Rows = new ObservableCollection<AssayRow>(rows);
+                Groups = rows.GroupBy(r => r.GroupId)
+                    .Select(g => g.First())
+                    .OrderBy(r => r.GroupN)
+                    .Select(r => new AssayGroupItem(r.GroupId, r.GroupName))
+                    .ToList();
+                SelectedGroup = Groups.FirstOrDefault();
                 isLoaded = true;
                 OkCommand.RaiseCanExecuteChanged();
             }
@@ -98,4 +152,7 @@ namespace Geonicle.Wpf.ViewModels
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    /// <summary>Группа показателей для таба (из строк формы).</summary>
+    public record AssayGroupItem(int GroupId, string GroupName);
 }
