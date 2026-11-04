@@ -167,11 +167,11 @@ namespace Geonicle.Data.Services
             foreach (var row in currentData.Samples)
                 row.SetSeam(holeSeamId);
 
-            // Показанные пробы определяются глубинами, как слои литологии: в режиме пластопересечения — пробы целиком
-            // внутри выбранного пластопересечения. Нумерация идёт по глубине среди показанных проб.
+            // Показанные пробы определяются глубинами: в режиме пластопересечения — пробы, пересекающиеся с ним хотя бы
+            // частично (как отбор в триггерах БД для HSSamps). Нумерация идёт по глубине среди показанных проб.
             var seam = bySeam ? currentData.HoleSeams.FirstOrDefault(s => s.HoleSeamId == holeSeamId) : null;
             var shown = currentData.Samples
-                .Where(r => !bySeam || (seam is { DepthFrom: { } from, DepthTo: { } to } && from <= r.DepthFrom && r.DepthTo <= to))
+                .Where(r => !bySeam || (seam is { DepthFrom: { } from, DepthTo: { } to } && r.DepthFrom < to && r.DepthTo > from))
                 .OrderBy(r => r.DepthFrom)
                 .ToList();
             foreach (var row in currentData.Samples)

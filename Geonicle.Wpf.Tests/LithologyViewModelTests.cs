@@ -562,9 +562,13 @@ public class LithologyViewModelTests
 
         screen.ShowByHoleSeam = true;
         var first = screen.SamplesFilterCriteria.ToString();
-        Assert.Contains("DepthFrom", first);
-        Assert.Contains("10", first);
-        Assert.Contains("12", first);
+        // Пересечение, как в триггере БД: DepthFrom пробы < До пласта и DepthTo пробы > От пласта.
+        Assert.Contains("[DepthFrom] Less 12", first);
+        Assert.Contains("[DepthTo] Greater 10", first);
+        // У литологии правило другое: слой целиком внутри пласта.
+        screen.ShowByHoleSeam = true;
+        Assert.Contains("[DepthFrom] GreaterOrEqual 10", screen.LithologyFilterCriteria.ToString());
+        Assert.Contains("[DepthTo] LessOrEqual 12", screen.LithologyFilterCriteria.ToString());
 
         screen.ShowByHoleSeam = false;
         Assert.Null(screen.SamplesFilterCriteria);

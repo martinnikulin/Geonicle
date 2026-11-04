@@ -291,27 +291,35 @@ namespace Geonicle.Wpf.ViewModels
         private void UpdateSampleView()
         {
             dataService.UpdateSampleView(SelectedHoleSeam?.HoleSeamId, ShowByHoleSeam);
-            SamplesFilterCriteria = SeamRangeCriteria("SampleId");
+            SamplesFilterCriteria = SeamRangeCriteria("SampleId", overlap: true);
         }
 
         private void UpdateLithologyFilter() => LithologyFilterCriteria = SeamRangeCriteria("LithologyId");
 
         /// <summary>
-        /// Условие «строка (слой литологии или проба) лежит между глубинами выбранного пластопересечения»; null — без условия
-        /// (флажок снят). Если пластопересечения нет, ничего не показываем: поле ключа никогда не равно -1.
+        /// Условие показа строк (слоёв литологии или проб) по глубинам выбранного пластопересечения; null — без условия
+        /// (флажок снят). Слой литологии показывается, если лежит целиком внутри пластопересечения; проба — если пересекается
+        /// с ним хотя бы частично (<paramref name="overlap"/>, так триггеры БД связывают пробы с пластопересечением в HSSamps).
+        /// Если пластопересечения нет, ничего не показываем: поле ключа никогда не равно -1.
         /// У разных пластов значения глубин разные, поэтому грид перефильтровывается при смене пласта.
         /// </summary>
-        private CriteriaOperator? SeamRangeCriteria(string keyField)
+        private CriteriaOperator? SeamRangeCriteria(string keyField, bool overlap = false)
         {
             if (!ShowByHoleSeam)
                 return null;
 
-            return SelectedHoleSeam is { DepthFrom: { } from, DepthTo: { } to }
+            if (SelectedHoleSeam is not { DepthFrom: { } from, DepthTo: { } to })
+                return new BinaryOperator(keyField, -1);
+
+            return overlap
                 ? new GroupOperator(
                     GroupOperatorType.And,
+                    new BinaryOperator("DepthFrom", to, BinaryOperatorType.Less),
+                    new BinaryOperator("DepthTo", from, BinaryOperatorType.Greater))
+                : new GroupOperator(
+                    GroupOperatorType.And,
                     new BinaryOperator("DepthFrom", from, BinaryOperatorType.GreaterOrEqual),
-                    new BinaryOperator("DepthTo", to, BinaryOperatorType.LessOrEqual))
-                : new BinaryOperator(keyField, -1);
+                    new BinaryOperator("DepthTo", to, BinaryOperatorType.LessOrEqual));
         }
 
         /// <summary>Лента выбрала другую скважину или прослой: перечитываем данные экрана.</summary>

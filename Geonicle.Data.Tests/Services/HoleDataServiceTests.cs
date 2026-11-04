@@ -573,15 +573,21 @@ public class SampleRowsTests
     }
 
     [Fact]
-    public async Task A_sample_that_is_not_fully_inside_the_seam_is_not_numbered()
+    public async Task A_sample_partly_inside_the_seam_is_shown_but_one_outside_is_not()
     {
         var setup = Seed();
         var service = Service(setup);
-        var data = await service.LoadAsync(setup.Hole, 100);
-        data.Samples.Single(r => r.Nsample == "B").DepthTo = 26;   // выходит за границу пластопересечения A (0–25)
+        var data = await service.LoadAsync(setup.Hole, 100);   // пластопересечение A: 0–25
+        var b = data.Samples.Single(r => r.Nsample == "B");
 
+        b.DepthFrom = 24;
+        b.DepthTo = 26;   // выходит за границу, но пересекается с пластом
         service.UpdateSampleView(setup.SeamA, bySeam: true);
+        Assert.Equal(new[] { 1, 2, 0 }, data.Samples.Select(r => r.N));
 
+        b.DepthFrom = 25;
+        b.DepthTo = 26;   // касается границы, но не пересекается (как Samples.DepthFrom < DepthTo в триггере)
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
         Assert.Equal(new[] { 1, 0, 0 }, data.Samples.Select(r => r.N));
     }
 
