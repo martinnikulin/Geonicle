@@ -12,9 +12,9 @@ using Xunit;
 namespace Geonicle.Wpf.Tests;
 
 /// <summary>Заглушка сервиса экрана «Данные по скважинам»: данные по ключу (скважина, прослой), вызовы запоминаются.</summary>
-public sealed class FakeHoleData : IHoleDataService
+public sealed class FakeBoreholeData : IBoreholeDataService
 {
-    public Dictionary<(int?, int?), HoleData> Data { get; } = new();
+    public Dictionary<(int?, int?), BoreholeData> Data { get; } = new();
 
     public List<(int? BoreholeId, int? InterbedId)> LoadCalls { get; } = new();
 
@@ -36,14 +36,14 @@ public sealed class FakeHoleData : IHoleDataService
 
     public bool HasChanges => Changed;
 
-    public Task<HoleData> LoadAsync(int? boreholeId, int? interbedId)
+    public Task<BoreholeData> LoadAsync(int? boreholeId, int? interbedId)
     {
         LoadCalls.Add((boreholeId, interbedId));
         OnLoad?.Invoke(boreholeId, interbedId);
         Changed = false;
         return Task.FromResult(Data.TryGetValue((boreholeId, interbedId), out var data)
             ? data
-            : new HoleData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>()));
+            : new BoreholeData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>()));
     }
 
     public Task SaveAsync()
@@ -76,7 +76,7 @@ public sealed class FakeHoleData : IHoleDataService
     public List<(SeamDef Seam, IReadOnlyList<Lithology> Layers)> Redefined { get; } = new();
 
     /// <summary>Если задана, добавление и переопределение бросают её (ошибка, понятная пользователю).</summary>
-    public HoleDataException EditError { get; set; }
+    public BoreholeDataException EditError { get; set; }
 
     public Task<SeamDef> AddHoleSeamAsync(IReadOnlyList<Lithology> layers)
     {
@@ -111,15 +111,15 @@ public sealed class FakeHoleData : IHoleDataService
     public void Dispose() => Disposed = true;
 }
 
-public class LithologyViewModelTests
+public class BoreholeDataViewModelTests
 {
     private readonly FakeDialogs dialogs = new();
     private readonly DataFilter filter = new();
-    private readonly FakeHoleData service = new();
+    private readonly FakeBoreholeData service = new();
 
-    private LithologyViewModel Screen() => new(service, filter, dialogs);
+    private BoreholeDataViewModel Screen() => new(service, filter, dialogs);
 
-    private static HoleData Data(params SeamDef[] seams) =>
+    private static BoreholeData Data(params SeamDef[] seams) =>
         new(new ObservableCollection<SeamDef>(seams), new ObservableCollection<Lithology>());
 
     // Глубины пластопересечения — вычисляемые, из слоёв-границ литологии.
@@ -365,7 +365,7 @@ public class LithologyViewModelTests
 
     private static Lithology Layer(int id, decimal from, decimal to) => new() { LithologyId = id, DepthFrom = from, DepthTo = to };
 
-    private async Task<LithologyViewModel> LoadedScreenWithSelection(bool sortedByDepth, params Lithology[] selected)
+    private async Task<BoreholeDataViewModel> LoadedScreenWithSelection(bool sortedByDepth, params Lithology[] selected)
     {
         filter.BoreholeId = 5;
         filter.InterbedId = 100;
@@ -493,7 +493,7 @@ public class LithologyViewModelTests
     public async Task Service_errors_are_shown_to_the_user_and_do_not_refresh()
     {
         var screen = await LoadedScreenWithSelection(true, Layer(1, 0, 5));
-        service.EditError = new HoleDataException("Нет пласта без названия.");
+        service.EditError = new BoreholeDataException("Нет пласта без названия.");
         var refreshes = 0;
         screen.RefreshRequested += (_, _) => refreshes++;
 
@@ -511,7 +511,7 @@ public class LithologyViewModelTests
         filter.BoreholeId = 5;
         filter.InterbedId = 100;
         var samples = new ObservableCollection<SampleRow> { new(new SampleDef { Nsample = "A" }) };
-        service.Data[(5, 100)] = new HoleData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>(), samples);
+        service.Data[(5, 100)] = new BoreholeData(new ObservableCollection<SeamDef>(), new ObservableCollection<Lithology>(), samples);
         var screen = Screen();
 
         await screen.LoadAsync();
@@ -593,7 +593,7 @@ public class LithologyViewModelTests
         Assert.NotEqual(before, screen.SamplesFilterCriteria.ToString());
         Assert.Contains("20", screen.SamplesFilterCriteria.ToString());
         Assert.Contains("22", screen.SamplesFilterCriteria.ToString());
-        Assert.Contains(nameof(LithologyViewModel.SamplesFilterCriteria), changed);
+        Assert.Contains(nameof(BoreholeDataViewModel.SamplesFilterCriteria), changed);
     }
 
     [Fact]
@@ -624,8 +624,8 @@ public class LithologyViewModelTests
 
         Assert.False(screen.AcceptedReadOnly);
         Assert.False(screen.CanAddOrDeleteSamples);
-        Assert.Contains(nameof(LithologyViewModel.AcceptedReadOnly), raised);
-        Assert.Contains(nameof(LithologyViewModel.CanAddOrDeleteSamples), raised);
+        Assert.Contains(nameof(BoreholeDataViewModel.AcceptedReadOnly), raised);
+        Assert.Contains(nameof(BoreholeDataViewModel.CanAddOrDeleteSamples), raised);
     }
 
     [Fact]

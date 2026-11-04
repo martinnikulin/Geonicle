@@ -20,16 +20,16 @@ namespace Geonicle.Wpf.ViewModels
     /// Экран «Данные по скважинам»: пластопересечения выбранной скважины и прослоя (сверху)
     /// и литология скважины (внизу). Скважину и прослой задаёт лента через DataFilter.
     /// </summary>
-    public class LithologyViewModel : DataViewModelBase
+    public class BoreholeDataViewModel : DataViewModelBase
     {
-        private readonly IHoleDataService dataService;
+        private readonly IBoreholeDataService dataService;
         private readonly DataFilter filter;
         private readonly IUserDialogs dialogs;
         private (int? BoreholeId, int? InterbedId) loadedKey;
         private bool isLoading;
         private bool lookupsLoaded;
 
-        public LithologyViewModel(IHoleDataService dataService, DataFilter filter, IUserDialogs dialogs)
+        public BoreholeDataViewModel(IBoreholeDataService dataService, DataFilter filter, IUserDialogs dialogs)
             : base(dialogs)
         {
             this.dataService = dataService;
@@ -260,7 +260,7 @@ namespace Geonicle.Wpf.ViewModels
             {
                 await action(selection.Layers);
             }
-            catch (HoleDataException ex)
+            catch (BoreholeDataException ex)
             {
                 dialogs.Show(ex.Message, "Пластопересечение", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;

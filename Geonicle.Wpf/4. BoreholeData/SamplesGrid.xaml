@@ -19,7 +19,7 @@
                                          FalseValue="Navigation" />
     </UserControl.Resources>
 
-    <!-- DataContext наследуется от экрана (LithologyViewModel). Колонки и настройки грида «Пробы» описаны только здесь.
+    <!-- DataContext наследуется от экрана (BoreholeDataViewModel). Колонки и настройки грида «Пробы» описаны только здесь.
          Строки — SampleRow: правятся проба (SampleDef) и «Принято» (HSSamps.Accepted); колонки Ad только для чтения
          (их считает представление Samples). FilterCriteria задаёт модель (в режиме пластопересечения — пробы пласта). -->
     <dxg:GridControl

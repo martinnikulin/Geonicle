@@ -1,9 +1,9 @@
 namespace Geonicle.Data.Services
 {
     /// <summary>Действие с данными скважины невозможно; текст предназначен для показа пользователю.</summary>
-    public class HoleDataException : Exception
+    public class BoreholeDataException : Exception
     {
-        public HoleDataException(string message)
+        public BoreholeDataException(string message)
             : base(message)
         {
         }

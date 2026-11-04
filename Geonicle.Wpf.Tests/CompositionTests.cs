@@ -23,7 +23,7 @@ public class CompositionTests
     [InlineData(typeof(BoreholesViewModel))]
     [InlineData(typeof(LinesViewModel))]
     [InlineData(typeof(SeamsViewModel))]
-    [InlineData(typeof(LithologyViewModel))]
+    [InlineData(typeof(BoreholeDataViewModel))]
     [InlineData(typeof(IBoreholesService))]
     [InlineData(typeof(ILinesService))]
     [InlineData(typeof(ISeamsService))]

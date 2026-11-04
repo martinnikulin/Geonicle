@@ -11,7 +11,7 @@ namespace Geonicle.Wpf.Behaviors
     /// Присоединяемое свойство для грида литологии: даёт модели экрана доступ к выбранным строкам и к сортировке грида.
     /// Модель читает их в момент вызова (доступность и выполнение пунктов меню «Добавить пластопересечение» и
     /// «Переопределить пластопересечение»), поэтому подписываться на события выбора и сортировки не нужно.
-    /// Использование: behaviors:LithologyGridSelection.Enabled="True" на GridControl (DataContext — LithologyViewModel).
+    /// Использование: behaviors:LithologyGridSelection.Enabled="True" на GridControl (DataContext — BoreholeDataViewModel).
     /// </summary>
     public static class LithologyGridSelection
     {
@@ -43,7 +43,7 @@ namespace Geonicle.Wpf.Behaviors
 
         private static void Attach(GridControl grid)
         {
-            if (grid.DataContext is LithologyViewModel viewModel)
+            if (grid.DataContext is BoreholeDataViewModel viewModel)
                 viewModel.LayerSelectionProvider = () => Read(grid);
         }
 

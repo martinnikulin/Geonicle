@@ -1,8 +1,8 @@
 namespace Geonicle.Wpf.Views
 {
-    public partial class LithologyView
+    public partial class BoreholeDataView
     {
-        public LithologyView()
+        public BoreholeDataView()
         {
             InitializeComponent();
         }

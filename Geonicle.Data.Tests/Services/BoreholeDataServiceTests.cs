@@ -6,7 +6,7 @@ using Xunit;
 namespace Geonicle.Data.Tests.Services;
 
 /// <summary>Экран «Данные по скважинам»: выборка по скважине и прослою, справочники, проверка при сохранении.</summary>
-public class HoleDataServiceTests
+public class BoreholeDataServiceTests
 {
     private static (TestDb Db, int HoleA, int HoleB) Seed()
     {
@@ -38,7 +38,7 @@ public class HoleDataServiceTests
     public async Task Seams_are_limited_to_the_borehole_and_interbed()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
 
         var data = await service.LoadAsync(holeA, 100);
 
@@ -51,7 +51,7 @@ public class HoleDataServiceTests
     public async Task Seam_depths_come_from_the_boundary_lithology_layers()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
 
         var seam = Assert.Single((await service.LoadAsync(holeA, 100)).HoleSeams);
 
@@ -63,7 +63,7 @@ public class HoleDataServiceTests
     public async Task Layers_get_the_name_of_the_seam_that_contains_them()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
 
         var data = await service.LoadAsync(holeA, 100);
 
@@ -77,7 +77,7 @@ public class HoleDataServiceTests
     public async Task Seam_names_follow_edited_depths_after_UpdateSeamNames()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         var data = await service.LoadAsync(holeA, 100);
         var layer = data.Lithology.Single(l => l.DepthFrom == 0);
         Assert.Null(layer.SeamName);
@@ -108,7 +108,7 @@ public class HoleDataServiceTests
                 new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = upper.LithologyId, DepthToId = upper.LithologyId });
             db.SaveChanges();
         }
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         int holeId;
         using (var db = testDb.CreateDbContext())
             holeId = db.Boreholes.Single().BoreholeId;
@@ -122,7 +122,7 @@ public class HoleDataServiceTests
     public async Task Lithology_is_the_whole_borehole_regardless_of_interbed()
     {
         var (testDb, holeA, holeB) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
 
         Assert.Equal(3, (await service.LoadAsync(holeA, 100)).Lithology.Count);
         Assert.Equal(3, (await service.LoadAsync(holeA, 200)).Lithology.Count);
@@ -133,7 +133,7 @@ public class HoleDataServiceTests
     public async Task Nothing_is_loaded_without_a_borehole_or_interbed()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
 
         var noHole = await service.LoadAsync(null, 100);
         Assert.Empty(noHole.HoleSeams);
@@ -148,7 +148,7 @@ public class HoleDataServiceTests
     public async Task Reloading_replaces_the_previous_data()
     {
         var (testDb, holeA, holeB) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
 
         await service.LoadAsync(holeA, 100);
         var data = await service.LoadAsync(holeB, 100);
@@ -162,7 +162,7 @@ public class HoleDataServiceTests
     public async Task Edited_layer_is_saved()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         var data = await service.LoadAsync(holeA, 100);
 
         data.Lithology.First(l => l.DepthFrom == 0).Th = 7;
@@ -177,7 +177,7 @@ public class HoleDataServiceTests
     public async Task Duplicate_depth_from_blocks_the_save()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         var data = await service.LoadAsync(holeA, 100);
 
         data.Lithology.Add(new Lithology { BoreholeId = holeA, DepthFrom = 10, DepthTo = 15 });
@@ -190,7 +190,7 @@ public class HoleDataServiceTests
     public async Task Layer_added_to_the_list_gets_the_borehole_and_is_saved()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         var data = await service.LoadAsync(holeA, 100);
 
         data.Lithology.Add(new Lithology { DepthFrom = 40, DepthTo = 50 });   // BoreholeId не задан: подставляется коллекцией скважины
@@ -204,7 +204,7 @@ public class HoleDataServiceTests
     public async Task Invalid_draw_values_block_the_save()
     {
         var (testDb, holeA, _) = Seed();
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         var data = await service.LoadAsync(holeA, 100);
 
         var seam = data.HoleSeams.Single();
@@ -230,7 +230,7 @@ public class HoleDataServiceTests
             db.Seams.AddRange(new Seam { Description = "Б пласт", ShortName = "Б" }, new Seam { Description = "А пласт", ShortName = "А" });
             db.SaveChanges();
         }
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         await service.LoadAsync(null, null);
 
         Assert.Equal(new[] { "Г", "Ж" }, (await service.GetCoalGradeLookupAsync()).Select(i => i.Name));
@@ -266,9 +266,9 @@ public class HoleSeamEditingTests
         return new Setup(testDb, hole.BoreholeId, noName.SeamId);
     }
 
-    private static HoleDataService Service(Setup s) => new(s.Db) { NoNameSeamId = s.NoNameSeamId };
+    private static BoreholeDataService Service(Setup s) => new(s.Db) { NoNameSeamId = s.NoNameSeamId };
 
-    private static IReadOnlyList<Lithology> Layers(HoleData data, params decimal[] depthFrom) =>
+    private static IReadOnlyList<Lithology> Layers(BoreholeData data, params decimal[] depthFrom) =>
         depthFrom.Select(d => data.Lithology.Single(l => l.DepthFrom == d)).ToList();
 
     [Fact]
@@ -346,7 +346,7 @@ public class HoleSeamEditingTests
         var service = Service(setup);
         await service.LoadAsync(setup.Hole, 100);
 
-        var error = await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(new List<Lithology>()));
+        var error = await Assert.ThrowsAsync<BoreholeDataException>(() => service.AddHoleSeamAsync(new List<Lithology>()));
         Assert.Contains("Выберите строки литологии", error.Message);
     }
 
@@ -359,7 +359,7 @@ public class HoleSeamEditingTests
         var unsaved = new Lithology { DepthFrom = 40, DepthTo = 50 };
         data.Lithology.Add(unsaved);
 
-        var error = await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(new[] { Layers(data, 30)[0], unsaved }));
+        var error = await Assert.ThrowsAsync<BoreholeDataException>(() => service.AddHoleSeamAsync(new[] { Layers(data, 30)[0], unsaved }));
         Assert.Contains("несохранённые", error.Message);
     }
 
@@ -367,10 +367,10 @@ public class HoleSeamEditingTests
     public async Task Missing_no_name_seam_gives_a_clear_error()
     {
         var setup = Seed();
-        var service = new HoleDataService(setup.Db) { NoNameSeamId = 12345 };
+        var service = new BoreholeDataService(setup.Db) { NoNameSeamId = 12345 };
         var data = await service.LoadAsync(setup.Hole, 100);
 
-        var error = await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(Layers(data, 10)));
+        var error = await Assert.ThrowsAsync<BoreholeDataException>(() => service.AddHoleSeamAsync(Layers(data, 10)));
         Assert.Contains("нет «пласта без названия»", error.Message);
     }
 
@@ -381,7 +381,7 @@ public class HoleSeamEditingTests
         var service = Service(setup);
         var data = await service.LoadAsync(null, 100);
 
-        await Assert.ThrowsAsync<HoleDataException>(() => service.AddHoleSeamAsync(new[] { new Lithology { LithologyId = 1 } }));
+        await Assert.ThrowsAsync<BoreholeDataException>(() => service.AddHoleSeamAsync(new[] { new Lithology { LithologyId = 1 } }));
     }
 
     [Fact]
@@ -428,7 +428,7 @@ public class HoleSeamEditingTests
         var service = Service(setup);
         var data = await service.LoadAsync(setup.Hole, 100);
 
-        await Assert.ThrowsAsync<HoleDataException>(() => service.RedefineHoleSeamAsync(new SeamDef(), Layers(data, 10)));
+        await Assert.ThrowsAsync<BoreholeDataException>(() => service.RedefineHoleSeamAsync(new SeamDef(), Layers(data, 10)));
     }
 
     [Fact]
@@ -520,7 +520,7 @@ public class SampleRowsTests
         return new Setup(testDb, hole.BoreholeId, seamA.HoleSeamId, seamB.HoleSeamId);
     }
 
-    private static HoleDataService Service(Setup s) => new(s.Db);
+    private static BoreholeDataService Service(Setup s) => new(s.Db);
 
     [Fact]
     public async Task Samples_of_the_borehole_are_loaded_ordered_by_depth()
@@ -743,7 +743,7 @@ public class SampleRowsTests
                 new Dictionary { Section = "марка", N = 1, Description = "не берём" });
             db.SaveChanges();
         }
-        var service = new HoleDataService(testDb);
+        var service = new BoreholeDataService(testDb);
         await service.LoadAsync(null, null);
 
         var items = await service.GetAdIndexLookupAsync();
