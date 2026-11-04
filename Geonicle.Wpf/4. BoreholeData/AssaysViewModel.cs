@@ -10,7 +10,7 @@ using System.Windows;
 namespace Geonicle.Wpf.ViewModels
 {
     /// <summary>
-    /// Окно «Анализы» пробы: актуальные показатели по группам, редактируется только значение.
+    /// Окно «Анализы» пробы: актуальные показатели по группам (группировка — в самом гриде), редактируется только значение.
     /// «ОК» записывает изменения в БД сразу (отдельно от кнопки «Сохранить» экрана) и закрывает окно,
     /// «Отмена» закрывает без сохранения.
     /// </summary>
@@ -19,7 +19,6 @@ namespace Geonicle.Wpf.ViewModels
         private readonly IAssayService service;
         private readonly IUserDialogs dialogs;
         private int sampleId;
-        private bool groupByGroups = true;
         private bool isLoaded;
 
         public AssaysViewModel(IAssayService service, IUserDialogs dialogs)
@@ -55,23 +54,6 @@ namespace Geonicle.Wpf.ViewModels
             get => GetValue<ObservableCollection<AssayRow>?>();
             private set => SetValue(value);
         }
-
-        /// <summary>Флажок «По группам»: строки сгруппированы по группам показателей.</summary>
-        public bool GroupByGroups
-        {
-            get => groupByGroups;
-            set
-            {
-                if (groupByGroups == value)
-                    return;
-                groupByGroups = value;
-                RaisePropertyChanged(nameof(GroupByGroups));
-                RaisePropertyChanged(nameof(GroupIndex));
-            }
-        }
-
-        /// <summary>Индекс группировки колонки «Группа» в гриде: 0 — сгруппировано, -1 — нет.</summary>
-        public int GroupIndex => GroupByGroups ? 0 : -1;
 
         public async Task InitializeAsync(int sampleId, string title)
         {

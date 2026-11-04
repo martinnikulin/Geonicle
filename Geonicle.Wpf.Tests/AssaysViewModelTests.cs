@@ -56,23 +56,6 @@ public class AssaysViewModelTests
     }
 
     [Fact]
-    public async Task Grouping_is_on_by_default_and_the_checkbox_switches_the_group_index()
-    {
-        var window = Window();
-        await window.InitializeAsync(42, "t");
-        var changed = new List<string>();
-        window.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        Assert.True(window.GroupByGroups);
-        Assert.Equal(0, window.GroupIndex);
-
-        window.GroupByGroups = false;
-
-        Assert.Equal(-1, window.GroupIndex);
-        Assert.Contains(nameof(AssaysViewModel.GroupIndex), changed);
-    }
-
-    [Fact]
     public async Task Ok_saves_the_edited_rows_for_the_sample_then_reports_saved_and_closes()
     {
         var window = Window();
