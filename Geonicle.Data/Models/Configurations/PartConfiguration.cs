@@ -20,8 +20,9 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         entity.Property(e => e.DateModified)
             .HasDefaultValueSql("(getdate())", "DF_dbo_Parts_DateModified")
             .HasColumnType("datetime");
+        // В данных Parts.Description бывает NULL, а скаффолд считал поле обязательным (EF падал с «Data is Null»).
         entity.Property(e => e.Description)
-            .IsRequired()
+            .IsRequired(false)
             .HasMaxLength(150)
             .HasDefaultValue("", "DF_Parts_description");
         entity.Property(e => e.N).HasDefaultValue(1, "DF_Parts_part_nn");

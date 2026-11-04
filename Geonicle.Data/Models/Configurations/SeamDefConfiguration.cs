@@ -53,6 +53,9 @@ public class SeamDefConfiguration : IEntityTypeConfiguration<SeamDef>
         entity.Property(e => e.ThFull).HasColumnType("numeric(18, 2)");
         entity.Property(e => e.ThR).HasDefaultValue(true);
 
+        // Границы пластопересечения (DepthFromId, DepthToId) — внешние ключи на Lithology без каскада в БД.
+        // Каскад в трекере удалил бы загруженное пластопересечение вместе со слоем литологии, и БД это допустила бы.
+        // NoAction: EF пластопересечение не трогает, а БД отклоняет удаление слоя-границы ошибкой внешнего ключа.
         entity.HasOne(d => d.Borehole).WithMany(p => p.SeamDefs)
             .HasForeignKey(d => d.BoreholeId)
             .OnDelete(DeleteBehavior.ClientSetNull)
@@ -60,12 +63,12 @@ public class SeamDefConfiguration : IEntityTypeConfiguration<SeamDef>
 
         entity.HasOne(d => d.DepthFromNavigation).WithMany(p => p.SeamDefDepthFromNavigations)
             .HasForeignKey(d => d.DepthFromId)
-            .OnDelete(DeleteBehavior.ClientSetNull)
+            .OnDelete(DeleteBehavior.NoAction)   // границы пластопересечения: см. примечание выше
             .HasConstraintName("FK_SeamDefs_Lithology1");
 
         entity.HasOne(d => d.DepthToNavigation).WithMany(p => p.SeamDefDepthToNavigations)
             .HasForeignKey(d => d.DepthToId)
-            .OnDelete(DeleteBehavior.ClientSetNull)
+            .OnDelete(DeleteBehavior.NoAction)   // границы пластопересечения: см. примечание выше
             .HasConstraintName("FK_SeamDefs_Lithology2");
 
         entity.HasOne(d => d.Seam).WithMany(p => p.SeamDefs)

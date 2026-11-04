@@ -2,20 +2,13 @@
 
 namespace Data.Models;
 
-// Ручные настройки модели; сгенерированный GDB52Context.cs не правим.
+// Общие правила модели, действующие на все сущности. Отображение каждой сущности — в Models/Configurations.
 public partial class GDB52Context
 {
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
-        // В БД первичный ключ Coeffs составной (SeamId, InterbedId, CoalGrade, CoalType), а EF не даёт менять
-        // значения ключа у существующей строки, поэтому в гриде нельзя было бы сменить прослой, тип или марку.
-        // В модели приложения ключом считаем счётчик CoeffId (он уникален); схему БД это не меняет.
-        modelBuilder.Entity<Coeff>().HasKey(e => e.CoeffId);
-
-        // В данных Parts.Description бывает NULL, а скаффолд считает поле обязательным (EF падает с «Data is Null»).
-        modelBuilder.Entity<Part>().Property(e => e.Description).IsRequired(false);
-
-        // Скаффолд ставит ClientSetNull на обязательные связи. Когда строку подчинённого грида удаляют
+        // Скаффолд ставит ClientSetNull на обязательные связи (исключения, например NoAction у границ пластопересечения,
+        // заданы в конфигурации сущности). Когда строку подчинённого грида удаляют
         // из коллекции родителя (SelectedLine.LineHoles), EF считает связь разорванной и падает
         // ("association has been severed"). Каскад здесь действует только в трекере EF: схему БД и
         // её внешние ключи это не меняет, а подчинённая строка просто удаляется.
@@ -23,15 +16,6 @@ public partial class GDB52Context
         {
             if (foreignKey.IsRequired && foreignKey.DeleteBehavior == DeleteBehavior.ClientSetNull)
                 foreignKey.DeleteBehavior = DeleteBehavior.Cascade;
-        }
-
-        // Границы пластопересечения (DepthFromId, DepthToId) — внешние ключи на Lithology без каскада в БД.
-        // Каскад в трекере удалил бы загруженное пластопересечение вместе со слоем литологии, и БД это допустила бы.
-        // NoAction: EF пластопересечение не трогает, а БД отклоняет удаление слоя-границы ошибкой внешнего ключа.
-        foreach (var foreignKey in modelBuilder.Model.FindEntityType(typeof(SeamDef))!.GetForeignKeys()
-                     .Where(fk => fk.PrincipalEntityType.ClrType == typeof(Lithology)))
-        {
-            foreignKey.DeleteBehavior = DeleteBehavior.NoAction;
         }
     }
 }

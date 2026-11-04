@@ -9,7 +9,10 @@ public class CoeffConfiguration : IEntityTypeConfiguration<Coeff>
 {
     public void Configure(EntityTypeBuilder<Coeff> entity)
     {
-        entity.HasKey(e => new { e.SeamId, e.InterbedId, e.CoalGrade, e.CoalType });
+        // В БД первичный ключ Coeffs составной (SeamId, InterbedId, CoalGrade, CoalType), а EF не даёт менять
+        // значения ключа у существующей строки, поэтому в гриде нельзя было бы сменить прослой, тип или марку.
+        // В модели приложения ключом считаем счётчик CoeffId (он уникален); схему БД это не меняет.
+        entity.HasKey(e => e.CoeffId);
 
         entity.HasIndex(e => e.SeamId, "IX_Coeffs");
 
