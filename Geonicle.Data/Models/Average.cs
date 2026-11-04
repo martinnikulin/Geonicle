@@ -1,6 +1,7 @@
 ﻿#nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Data.Models;
 
@@ -25,4 +26,11 @@ public partial class Average
     public DateTime DateModified { get; set; }
 
     public virtual Seam Seam { get; set; }
+
+    /// <summary>
+    /// Строка ещё не сохранена (DateCreated выставляет БД при вставке). Показатель, тип и марка — части ключа: у сохранённой
+    /// строки их менять нельзя, у новой можно.
+    /// </summary>
+    [NotMapped]
+    public bool IsNew => DateCreated == default;
 }

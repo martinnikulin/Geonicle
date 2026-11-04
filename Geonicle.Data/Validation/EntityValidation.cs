@@ -17,7 +17,19 @@ namespace Geonicle.Validation
         /// <summary>Возвращает ошибки в виде «Описание строки: сообщение»; пустой список, если всё верно.</summary>
         public static IReadOnlyList<string> Validate(DbContext context)
         {
-            context.ChangeTracker.DetectChanges();
+            try
+            {
+                context.ChangeTracker.DetectChanges();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Например, у новой строки задан тот же ключ, что у уже загруженной: EF не может отслеживать обе.
+                return new[]
+                {
+                    "Две строки совпадают по ключу (сочетание значений должно быть уникальным). Измените значения, чтобы они различались. "
+                    + "Подробности: " + ex.Message,
+                };
+            }
 
             var errors = new List<string>();
             foreach (var entry in context.ChangeTracker.Entries())

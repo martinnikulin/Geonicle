@@ -124,21 +124,8 @@ namespace Geonicle.Data.Services
         /// </summary>
         private async Task<ObservableCollection<SampleRow>> LoadSamplesAsync(GDB52Context context, int boreholeId)
         {
-            var defs = await context.SampleDefs
-                .Where(s => s.BoreholeId == boreholeId)
-                .Include(s => s.Hssamps)
-                .OrderBy(s => s.DepthFrom)
-                .ToListAsync();
-            var values = (await context.Samples.AsNoTracking().Where(v => v.BoreholeId == boreholeId).ToListAsync())
-                .ToDictionary(v => v.SampleId);
-
-            var rows = new ObservableCollection<SampleRow>();
-            foreach (var def in defs)
-            {
-                var row = new SampleRow(def);
-                row.SetValues(values.GetValueOrDefault(def.SampleId));
-                rows.Add(row);
-            }
+            var rows = new ObservableCollection<SampleRow>(
+                await SampleRowLoader.LoadAsync(context, context.SampleDefs.Where(s => s.BoreholeId == boreholeId)));
             rows.CollectionChanged += Samples_CollectionChanged;
             return rows;
         }
@@ -189,28 +176,7 @@ namespace Geonicle.Data.Services
             if (currentData == null)
                 return;
 
-            var context = Context;
-            var ids = currentData.Samples.Select(r => r.SampleId).Where(id => id != 0).ToList();
-
-            var existing = (await context.Hssamps.AsNoTracking().Where(h => ids.Contains(h.SampleId))
-                    .Select(h => new { h.HoleSeamId, h.SampleId }).ToListAsync())
-                .Select(h => (h.HoleSeamId, h.SampleId)).ToHashSet();
-            foreach (var entry in context.ChangeTracker.Entries<Hssamp>().ToList())
-            {
-                var link = entry.Entity;
-                if (existing.Contains((link.HoleSeamId, link.SampleId)))
-                {
-                    await entry.ReloadAsync();
-                }
-                else
-                {
-                    entry.State = EntityState.Detached;
-                    link.SampleDef?.Hssamps.Remove(link);
-                }
-            }
-            await context.Hssamps.Where(h => ids.Contains(h.SampleId)).LoadAsync();   // связи, добавленные триггером
-
-            await RefreshSampleValuesAsync();
+            await SampleRowLoader.RefreshLinksAndValuesAsync(Context, currentData.Samples);
         }
 
         /// <summary>
@@ -222,11 +188,7 @@ namespace Geonicle.Data.Services
             if (currentData == null)
                 return;
 
-            var ids = currentData.Samples.Select(r => r.SampleId).Where(id => id != 0).ToList();
-            var values = (await Context.Samples.AsNoTracking().Where(v => ids.Contains(v.SampleId)).ToListAsync())
-                .ToDictionary(v => v.SampleId);
-            foreach (var row in currentData.Samples)
-                row.SetValues(values.GetValueOrDefault(row.SampleId));
+            await SampleRowLoader.RefreshValuesAsync(Context, currentData.Samples);
         }
 
         /// <summary>Слой входит в пластопересечение, если лежит между его глубинами «От» и «До»; вне пластов название пустое.</summary>

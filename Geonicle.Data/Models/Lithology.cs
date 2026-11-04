@@ -60,4 +60,24 @@ public partial class Lithology
     /// </summary>
     [NotMapped]
     public string SeamName { get; set; }
+
+    private LithRe reservesLink;
+
+    /// <summary>
+    /// «В подсчёт» слоя для выбранного прослоя (LithRes.Reserves, строку создаёт триггер БД при добавлении слоя).
+    /// null — строки LithRes нет (дефект данных: значение не показывается и не правится). Только для показа и правки в гриде.
+    /// </summary>
+    [NotMapped]
+    public bool? Reserves
+    {
+        get => reservesLink?.Reserves;
+        set
+        {
+            if (reservesLink != null && value != null)
+                reservesLink.Reserves = value.Value;
+        }
+    }
+
+    /// <summary>Привязывает строку LithRes выбранного прослоя (задаёт сервис экрана).</summary>
+    public void SetReservesLink(LithRe link) => reservesLink = link;
 }
