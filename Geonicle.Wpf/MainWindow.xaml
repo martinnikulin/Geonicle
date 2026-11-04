@@ -11,7 +11,7 @@
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid" 
     xmlns:vm="clr-namespace:Geonicle.Wpf.ViewModels"
     xmlns:views="clr-namespace:Geonicle.Wpf.Views"
-    Title="MainWindow" Height="600" Width="1000">
+    Title="MainWindow" Height="800" Width="1300">
     
     <dx:ThemedWindow.Resources>
         <!-- EditSettings списков на ленте не видят DataContext, поэтому списки берём через прокси. -->

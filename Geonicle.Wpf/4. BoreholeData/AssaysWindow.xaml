@@ -41,11 +41,13 @@
                              SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
                              Visibility="{Binding GroupByGroups, Converter={StaticResource BoolToVisibility}}">
                 <dx:DXTabControl.View>
-                    <dx:TabControlMultiLineView HeaderLocation="Left" />
+                    <dx:TabControlScrollView
+            HeaderLocation="Left"
+            HeaderOrientation="Horizontal"/>
                 </dx:DXTabControl.View>
                 <dx:DXTabControl.ItemHeaderTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding GroupName}" TextWrapping="Wrap" MaxWidth="150" />
+                        <TextBlock Text="{Binding GroupName}" TextWrapping="Wrap" />
                     </DataTemplate>
                 </dx:DXTabControl.ItemHeaderTemplate>
                 <!-- Содержимого у табов нет: данные показывает общий грид. -->
@@ -63,7 +65,7 @@
                 <dxg:GridControl.Columns>
                     <dxg:GridColumn FieldName="GroupName" Header="Группа" ReadOnly="True" Visible="False"
                                     SortFieldName="GroupN" SortIndex="0" SortOrder="Ascending" />
-                    <dxg:GridColumn FieldName="N" Header="№" ReadOnly="True"
+                    <dxg:GridColumn FieldName="N" Header="№" ReadOnly="True" Width="50"
                                     SortIndex="1" SortOrder="Ascending" />
                     <dxg:GridColumn FieldName="Description" Header="Параметр" ReadOnly="True" />
                     <dxg:GridColumn FieldName="Val" Header="Значение" />
