@@ -27,7 +27,8 @@
         <!-- Группа сортируется по порядку группы (GroupN), показатели внутри группы — по номеру (N). -->
         <dxg:GridControl Grid.Row="1"
                          ItemsSource="{Binding Rows}"
-                         AutoGenerateColumns="None">
+                         AutoGenerateColumns="None"
+                         AutoExpandAllGroups="True">
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="GroupName" Header="Группа" ReadOnly="True"
                                 GroupIndex="{Binding GroupIndex}"
@@ -41,7 +42,6 @@
             <dxg:GridControl.View>
                 <dxg:TableView ShowGroupPanel="False"
                                ShowDataNavigator="False"
-                               AutoExpandAllGroups="True"
                                AllowSorting="False"
                                EditorShowMode="MouseDownFocused" />
             </dxg:GridControl.View>
