@@ -18,7 +18,7 @@ public partial class SeamDef
 
     public bool Detail { get; set; }
 
-    public string Kb { get; set; }
+    public KbType? Kb { get; set; }
 
     public bool OnMap { get; set; }
 

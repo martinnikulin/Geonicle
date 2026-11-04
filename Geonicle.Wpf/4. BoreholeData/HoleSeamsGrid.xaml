@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
     xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:models="clr-namespace:Data.Models;assembly=Geonicle.Data"
     xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
     xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
     xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
@@ -43,7 +44,8 @@
             <dxg:GridColumn FieldName="Kb" Header="КБ">
                 <dxg:GridColumn.EditSettings>
                     <dxe:ComboBoxEditSettings
-                        ItemsSource="{Binding Data.KbValues, Source={StaticResource ViewModelProxy}}"
+                        ItemsSource="{dxe:EnumItemsSource EnumType={x:Type models:KbType}}"
+                        AllowNullInput="True"
                         IsTextEditable="False" />
                 </dxg:GridColumn.EditSettings>
             </dxg:GridColumn>

@@ -50,6 +50,7 @@
 - В XAML грида список берём через `helpers:BindingProxy` (ресурс `Data="{Binding}"`), потому что `EditSettings` не видят DataContext. Образец: `2. Lines/LineHolesGrid.xaml`.
 
 - Колонки с `enum`: явный `ComboBoxEditSettings` с `ItemsSource="{dxe:EnumItemsSource EnumType={x:Type models:Имя}}"` и `IsTextEditable="False"` (подписи берутся из `[Display(Name=...)]`). Автоматически редактор-список для enum при явных колонках не создаётся.
+- Строковое поле БД с ограниченным набором значений (например, `SeamDef.Kb`, КБ) описываем перечислением (`KbType`) с подписями `[Display(Name)]`; в БД оно хранится той же строкой через `DisplayNameEnumConverter<T>` (`HasConversion` в конфигурации сущности; значение вне перечисления при чтении — понятная ошибка, а не тихая потеря). Колонка грида — как у `LineType`: `ComboBoxEditSettings` с `EnumItemsSource`, для необязательного поля `AllowNullInput="True"`.
 
 ### Контекстные меню
 - Меню каждого грида — отдельное свойство `GridMenu` в модели экрана, создаётся в конструкторе через `CreateGridMenu()` (в нём уже есть «Обновить»); свои пункты: `.Add("Подпись", команда)`.

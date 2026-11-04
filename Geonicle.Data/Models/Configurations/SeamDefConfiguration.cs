@@ -1,4 +1,5 @@
 ﻿#nullable disable
+using Geonicle.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -44,7 +45,8 @@ public class SeamDefConfiguration : IEntityTypeConfiguration<SeamDef>
         entity.Property(e => e.InterbedId).HasDefaultValue(100, "DF_SeamDefs_interbed_id");
         entity.Property(e => e.Kb)
             .HasMaxLength(12)
-            .HasColumnName("KB");
+            .HasColumnName("KB")
+            .HasConversion(new DisplayNameEnumConverter<KbType>());
         entity.Property(e => e.OnMap).HasDefaultValue(true, "DF__hole_seam__onmap__29572725");
         entity.Property(e => e.ResFrom).HasColumnType("decimal(18, 2)");
         entity.Property(e => e.ResTo).HasColumnType("decimal(18, 2)");

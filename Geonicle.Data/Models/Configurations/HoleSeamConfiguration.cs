@@ -1,4 +1,5 @@
 ﻿#nullable disable
+using Geonicle.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,7 +28,8 @@ public class HoleSeamConfiguration : IEntityTypeConfiguration<HoleSeam>
         entity.Property(e => e.DrawTo).HasColumnType("decimal(18, 2)");
         entity.Property(e => e.Kb)
             .HasMaxLength(12)
-            .HasColumnName("KB");
+            .HasColumnName("KB")
+            .HasConversion(new DisplayNameEnumConverter<KbType>());
         entity.Property(e => e.ThCoal).HasColumnType("numeric(18, 2)");
         entity.Property(e => e.ThFull).HasColumnType("numeric(18, 2)");
     }

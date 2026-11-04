@@ -146,7 +146,6 @@ public class BoreholeDataViewModelTests
         Assert.Equal(1, screen.SelectedHoleSeam.HoleSeamId);
         Assert.Equal("пласт", screen.SeamLookup.Single().Name);
         Assert.Equal("порода", screen.RockLookup.Single().Name);
-        Assert.Equal(HoleSeamKb.Values, screen.KbValues);
     }
 
     [Fact]

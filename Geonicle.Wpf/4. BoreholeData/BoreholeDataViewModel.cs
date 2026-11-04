@@ -82,9 +82,6 @@ namespace Geonicle.Wpf.ViewModels
 
         public bool CanRedefineHoleSeam => CanEditBoundaries() && SelectedHoleSeam != null;
 
-        /// <summary>Допустимые значения колонки «КБ».</summary>
-        public IReadOnlyList<string> KbValues => HoleSeamKb.Values;
-
         public ObservableCollection<SeamDef>? HoleSeams
         {
             get => GetValue<ObservableCollection<SeamDef>?>();

@@ -1,11 +1,10 @@
 using Data.Models;
 using FluentValidation;
-using Geonicle.Data.Services;
 
 namespace Geonicle.Validation
 {
     /// <summary>
-    /// Правила проверки пластопересечения: стопки, КБ и комментарий (длины как в схеме БД), границы и уникальность.
+    /// Правила проверки пластопересечения: стопки и комментарий (длины как в схеме БД), границы и уникальность.
     /// В БД границы уникальны в пределах скважины и прослоя (индексы AX_Holeseams_1 и AX_Holeseams_2);
     /// кроме того, пластопересечения одного прослоя не должны пересекаться.
     /// </summary>
@@ -15,10 +14,6 @@ namespace Geonicle.Validation
         {
             RuleFor(s => s.DrawTo)
                 .GreaterThanOrEqualTo(s => s.DrawFrom).WithMessage("«Стопки до» не может быть меньше «Стопки от».");
-
-            RuleFor(s => s.Kb)
-                .Must(kb => string.IsNullOrEmpty(kb) || HoleSeamKb.Values.Contains(kb))
-                .WithMessage("КБ должен быть одним из значений списка.");
 
             RuleFor(s => s.Comments)
                 .MaximumLength(20).WithMessage("Комментарий не может быть длиннее 20 символов.");
