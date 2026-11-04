@@ -122,6 +122,37 @@ public class BoreholeDataViewModelTests
     private static BoreholeData Data(params SeamDef[] seams) =>
         new(new ObservableCollection<SeamDef>(seams), new ObservableCollection<Lithology>());
 
+    /// <summary>
+    /// Условие грида как список простых сравнений (поле, оператор, значение): так тесты не зависят от текстового вида
+    /// условия (у DevExpress он свой: «[DepthFrom] &lt; 12.0m And …»).
+    /// </summary>
+    private static List<(string Field, BinaryOperatorType Operator, decimal Value)> Conditions(CriteriaOperator criteria)
+    {
+        static (string, BinaryOperatorType, decimal) One(CriteriaOperator operand)
+        {
+            var binary = Assert.IsType<BinaryOperator>(operand);
+            return (
+                Assert.IsType<OperandProperty>(binary.LeftOperand).PropertyName,
+                binary.OperatorType,
+                Convert.ToDecimal(Assert.IsType<OperandValue>(binary.RightOperand).Value));
+        }
+
+        return criteria switch
+        {
+            GroupOperator group => group.Operands.Select(One).ToList(),
+            BinaryOperator => new List<(string, BinaryOperatorType, decimal)> { One(criteria) },
+            _ => throw new Xunit.Sdk.XunitException($"Неожиданный вид условия: {criteria?.GetType().Name ?? "null"}"),
+        };
+    }
+
+    /// <summary>Слой литологии: целиком внутри пластопересечения [from; to].</summary>
+    private static List<(string, BinaryOperatorType, decimal)> Inside(decimal from, decimal to) =>
+        new() { ("DepthFrom", BinaryOperatorType.GreaterOrEqual, from), ("DepthTo", BinaryOperatorType.LessOrEqual, to) };
+
+    /// <summary>Проба: пересекается с пластопересечением [from; to] хотя бы частично (как отбор в триггере БД).</summary>
+    private static List<(string, BinaryOperatorType, decimal)> Overlapping(decimal from, decimal to) =>
+        new() { ("DepthFrom", BinaryOperatorType.Less, to), ("DepthTo", BinaryOperatorType.Greater, from) };
+
     // Глубины пластопересечения — вычисляемые, из слоёв-границ литологии.
     private static SeamDef Seam(int id, decimal from, decimal to) =>
         new()
@@ -317,16 +348,12 @@ public class BoreholeDataViewModelTests
         Assert.Null(screen.LithologyFilterCriteria);
 
         screen.ShowByHoleSeam = true;
-        var first = screen.LithologyFilterCriteria.ToString();
+        var first = Conditions(screen.LithologyFilterCriteria);
         screen.SelectedHoleSeam = screen.HoleSeams[1];
-        var second = screen.LithologyFilterCriteria.ToString();
+        var second = Conditions(screen.LithologyFilterCriteria);
 
-        Assert.NotNull(first);
-        Assert.NotEqual(first, second);
-        Assert.Contains("10", first);
-        Assert.Contains("12", first);
-        Assert.Contains("20", second);
-        Assert.Contains("22", second);
+        Assert.Equal(Inside(10, 12), first);
+        Assert.Equal(Inside(20, 22), second);
 
         screen.ShowByHoleSeam = false;
         Assert.Null(screen.LithologyFilterCriteria);
@@ -342,8 +369,8 @@ public class BoreholeDataViewModelTests
 
         screen.ShowByHoleSeam = true;
 
-        Assert.NotNull(screen.LithologyFilterCriteria);
-        Assert.Contains("LithologyId", screen.LithologyFilterCriteria.ToString());
+        var condition = Assert.Single(Conditions(screen.LithologyFilterCriteria));
+        Assert.Equal(("LithologyId", BinaryOperatorType.Equal, -1m), condition);   // ключ никогда не равен -1: ничего не показываем
     }
 
     [Fact]
@@ -560,14 +587,10 @@ public class BoreholeDataViewModelTests
         Assert.Null(screen.SamplesFilterCriteria);
 
         screen.ShowByHoleSeam = true;
-        var first = screen.SamplesFilterCriteria.ToString();
         // Пересечение, как в триггере БД: DepthFrom пробы < До пласта и DepthTo пробы > От пласта.
-        Assert.Contains("[DepthFrom] Less 12", first);
-        Assert.Contains("[DepthTo] Greater 10", first);
+        Assert.Equal(Overlapping(10, 12), Conditions(screen.SamplesFilterCriteria));
         // У литологии правило другое: слой целиком внутри пласта.
-        screen.ShowByHoleSeam = true;
-        Assert.Contains("[DepthFrom] GreaterOrEqual 10", screen.LithologyFilterCriteria.ToString());
-        Assert.Contains("[DepthTo] LessOrEqual 12", screen.LithologyFilterCriteria.ToString());
+        Assert.Equal(Inside(10, 12), Conditions(screen.LithologyFilterCriteria));
 
         screen.ShowByHoleSeam = false;
         Assert.Null(screen.SamplesFilterCriteria);
@@ -585,13 +608,11 @@ public class BoreholeDataViewModelTests
         screen.ShowByHoleSeam = true;
         var changed = new List<string>();
         screen.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-        var before = screen.SamplesFilterCriteria.ToString();
+        Assert.Equal(Overlapping(10, 12), Conditions(screen.SamplesFilterCriteria));
 
         screen.SelectedHoleSeam = screen.HoleSeams[1];
 
-        Assert.NotEqual(before, screen.SamplesFilterCriteria.ToString());
-        Assert.Contains("20", screen.SamplesFilterCriteria.ToString());
-        Assert.Contains("22", screen.SamplesFilterCriteria.ToString());
+        Assert.Equal(Overlapping(20, 22), Conditions(screen.SamplesFilterCriteria));
         Assert.Contains(nameof(BoreholeDataViewModel.SamplesFilterCriteria), changed);
     }
 
@@ -605,7 +626,8 @@ public class BoreholeDataViewModelTests
 
         screen.ShowByHoleSeam = true;
 
-        Assert.Contains("SampleId", screen.SamplesFilterCriteria.ToString());
+        var condition = Assert.Single(Conditions(screen.SamplesFilterCriteria));
+        Assert.Equal(("SampleId", BinaryOperatorType.Equal, -1m), condition);   // ключ никогда не равен -1: ничего не показываем
     }
 
     [Fact]
