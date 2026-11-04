@@ -488,7 +488,7 @@ public class SampleRowsTests
 {
     private sealed record Setup(TestDb Db, int Hole, int SeamA, int SeamB);
 
-    /// <summary>Скважина с тремя пробами; пластопересечение A связано с пробами 1 и 2, B — с пробой 2.</summary>
+    /// <summary>Скважина с тремя пробами (A 10–11, B 20–21, C 30–31); связи HSSamps: A—пласт A, B—пласт A, B—пласт B.</summary>
     private static Setup Seed()
     {
         var testDb = new TestDb();
@@ -498,11 +498,13 @@ public class SampleRowsTests
         var otherHole = new Borehole { HoleName = "B" };
         db.AddRange(seam, hole, otherHole);
         db.SaveChanges();
-        var layer = new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 0, DepthTo = 100 };
-        db.Lithologies.Add(layer);
+        // Пластопересечение A: 0–25 (пробы A и B целиком внутри), B: 15–100 (пробы B и C), прослои разные.
+        var layer1 = new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 0, DepthTo = 25 };
+        var layer2 = new Lithology { BoreholeId = hole.BoreholeId, DepthFrom = 15, DepthTo = 100 };
+        db.Lithologies.AddRange(layer1, layer2);
         db.SaveChanges();
-        var seamA = new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = layer.LithologyId, DepthToId = layer.LithologyId };
-        var seamB = new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 200, DepthFromId = layer.LithologyId, DepthToId = layer.LithologyId };
+        var seamA = new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 100, DepthFromId = layer1.LithologyId, DepthToId = layer1.LithologyId };
+        var seamB = new SeamDef { BoreholeId = hole.BoreholeId, SeamId = seam.SeamId, InterbedId = 200, DepthFromId = layer2.LithologyId, DepthToId = layer2.LithologyId };
         db.SeamDefs.AddRange(seamA, seamB);
         var s3 = new SampleDef { BoreholeId = hole.BoreholeId, DepthFrom = 30, DepthTo = 31, Nsample = "C", AdIndex = 1 };   // добавлена первой, глубже всех
         var s1 = new SampleDef { BoreholeId = hole.BoreholeId, DepthFrom = 10, DepthTo = 11, Nsample = "A", AdIndex = 1 };
@@ -557,13 +559,30 @@ public class SampleRowsTests
     {
         var setup = Seed();
         var service = Service(setup);
-        var data = await service.LoadAsync(setup.Hole, 100);
+        var first = await service.LoadAsync(setup.Hole, 100);   // прослой 100: пластопересечение A (0–25)
 
         service.UpdateSampleView(setup.SeamA, bySeam: false);   // вся скважина
-        Assert.Equal(new[] { 1, 2, 3 }, data.Samples.Select(r => r.N));
+        Assert.Equal(new[] { 1, 2, 3 }, first.Samples.Select(r => r.N));
 
-        service.UpdateSampleView(setup.SeamB, bySeam: true);    // только пробы пластопересечения B: проба «B»
-        Assert.Equal(new[] { 0, 1, 0 }, data.Samples.Select(r => r.N));
+        service.UpdateSampleView(setup.SeamA, bySeam: true);    // пробы целиком внутри 0–25: A и B
+        Assert.Equal(new[] { 1, 2, 0 }, first.Samples.Select(r => r.N));
+
+        var second = await service.LoadAsync(setup.Hole, 200);  // прослой 200: пластопересечение B (15–100)
+        service.UpdateSampleView(setup.SeamB, bySeam: true);    // пробы B и C
+        Assert.Equal(new[] { 0, 1, 2 }, second.Samples.Select(r => r.N));
+    }
+
+    [Fact]
+    public async Task A_sample_that_is_not_fully_inside_the_seam_is_not_numbered()
+    {
+        var setup = Seed();
+        var service = Service(setup);
+        var data = await service.LoadAsync(setup.Hole, 100);
+        data.Samples.Single(r => r.Nsample == "B").DepthTo = 26;   // выходит за границу пластопересечения A (0–25)
+
+        service.UpdateSampleView(setup.SeamA, bySeam: true);
+
+        Assert.Equal(new[] { 1, 0, 0 }, data.Samples.Select(r => r.N));
     }
 
     [Fact]

@@ -291,29 +291,27 @@ namespace Geonicle.Wpf.ViewModels
         private void UpdateSampleView()
         {
             dataService.UpdateSampleView(SelectedHoleSeam?.HoleSeamId, ShowByHoleSeam);
-
-            SamplesFilterCriteria = !ShowByHoleSeam
-                ? null
-                : SelectedHoleSeam != null
-                    ? new BinaryOperator("HasSeamLink", true)
-                    : new BinaryOperator("SampleId", -1);   // пластопересечения нет: проб не показываем
+            SamplesFilterCriteria = SeamRangeCriteria("SampleId");
         }
 
-        private void UpdateLithologyFilter()
+        private void UpdateLithologyFilter() => LithologyFilterCriteria = SeamRangeCriteria("LithologyId");
+
+        /// <summary>
+        /// Условие «строка (слой литологии или проба) лежит между глубинами выбранного пластопересечения»; null — без условия
+        /// (флажок снят). Если пластопересечения нет, ничего не показываем: поле ключа никогда не равно -1.
+        /// У разных пластов значения глубин разные, поэтому грид перефильтровывается при смене пласта.
+        /// </summary>
+        private CriteriaOperator? SeamRangeCriteria(string keyField)
         {
             if (!ShowByHoleSeam)
-            {
-                LithologyFilterCriteria = null;
-                return;
-            }
+                return null;
 
-            // Слои между глубинами выбранного пластопересечения; если пластопересечения нет, не показываем ни одного.
-            LithologyFilterCriteria = SelectedHoleSeam is { DepthFrom: { } from, DepthTo: { } to }
+            return SelectedHoleSeam is { DepthFrom: { } from, DepthTo: { } to }
                 ? new GroupOperator(
                     GroupOperatorType.And,
                     new BinaryOperator("DepthFrom", from, BinaryOperatorType.GreaterOrEqual),
                     new BinaryOperator("DepthTo", to, BinaryOperatorType.LessOrEqual))
-                : new BinaryOperator("LithologyId", -1);
+                : new BinaryOperator(keyField, -1);
         }
 
         /// <summary>Лента выбрала другую скважину или прослой: перечитываем данные экрана.</summary>

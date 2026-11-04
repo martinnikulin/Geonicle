@@ -551,20 +551,45 @@ public class LithologyViewModelTests
     }
 
     [Fact]
-    public async Task Samples_filter_is_off_for_the_whole_borehole_and_by_link_in_seam_mode()
+    public async Task Samples_filter_is_off_for_the_whole_borehole_and_by_seam_depths_in_seam_mode()
     {
         filter.BoreholeId = 5;
         filter.InterbedId = 100;
-        service.Data[(5, 100)] = Data(Seam(1, 10, 12));
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12), Seam(2, 20, 22));
         var screen = Screen();
         await screen.LoadAsync();
         Assert.Null(screen.SamplesFilterCriteria);
 
         screen.ShowByHoleSeam = true;
-        Assert.Contains("HasSeamLink", screen.SamplesFilterCriteria.ToString());
+        var first = screen.SamplesFilterCriteria.ToString();
+        Assert.Contains("DepthFrom", first);
+        Assert.Contains("10", first);
+        Assert.Contains("12", first);
 
         screen.ShowByHoleSeam = false;
         Assert.Null(screen.SamplesFilterCriteria);
+    }
+
+    [Fact]
+    public async Task Samples_filter_changes_when_another_seam_is_selected()
+    {
+        // Раньше условие не менялось при смене пластопересечения, и грид не перефильтровывался.
+        filter.BoreholeId = 5;
+        filter.InterbedId = 100;
+        service.Data[(5, 100)] = Data(Seam(1, 10, 12), Seam(2, 20, 22));
+        var screen = Screen();
+        await screen.LoadAsync();
+        screen.ShowByHoleSeam = true;
+        var changed = new List<string>();
+        screen.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var before = screen.SamplesFilterCriteria.ToString();
+
+        screen.SelectedHoleSeam = screen.HoleSeams[1];
+
+        Assert.NotEqual(before, screen.SamplesFilterCriteria.ToString());
+        Assert.Contains("20", screen.SamplesFilterCriteria.ToString());
+        Assert.Contains("22", screen.SamplesFilterCriteria.ToString());
+        Assert.Contains(nameof(LithologyViewModel.SamplesFilterCriteria), changed);
     }
 
     [Fact]
