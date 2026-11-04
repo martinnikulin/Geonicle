@@ -21,7 +21,8 @@
 
     <!-- DataContext наследуется от экрана (BoreholeDataViewModel). Колонки и настройки грида «Пробы» описаны только здесь.
          Строки — SampleRow: правятся проба (SampleDef) и «Принято» (HSSamps.Accepted); колонки Ad только для чтения
-         (их считает представление Samples). FilterCriteria задаёт модель (в режиме пластопересечения — пробы пласта). -->
+         (их считает представление Samples). Двойной щелчок по нередактируемой ячейке открывает окно «Анализы» (код в SamplesGrid.xaml.cs).
+         FilterCriteria задаёт модель (в режиме пластопересечения — пробы пласта). -->
     <dxg:GridControl
         ItemsSource="{Binding Samples}"
         FilterCriteria="{Binding SamplesFilterCriteria, Mode=OneWay}"
@@ -71,7 +72,8 @@
                 UseOnlyCurrentColumnInIncrementalSearch="True"
                 IncrementalSearchClearDelay="1500"
                 EditorShowMode="MouseDownFocused"
-                ShowFilterPanelMode="Never" />
+                ShowFilterPanelMode="Never"
+                RowDoubleClick="View_RowDoubleClick" />
         </dxg:GridControl.View>
     </dxg:GridControl>
 </UserControl>

@@ -25,16 +25,18 @@ namespace Geonicle.Wpf.ViewModels
         private readonly IBoreholeDataService dataService;
         private readonly DataFilter filter;
         private readonly IUserDialogs dialogs;
+        private readonly IAssaysWindowService assayWindows;
         private (int? BoreholeId, int? InterbedId) loadedKey;
         private bool isLoading;
         private bool lookupsLoaded;
 
-        public BoreholeDataViewModel(IBoreholeDataService dataService, DataFilter filter, IUserDialogs dialogs)
+        public BoreholeDataViewModel(IBoreholeDataService dataService, DataFilter filter, IUserDialogs dialogs, IAssaysWindowService assayWindows)
             : base(dialogs)
         {
             this.dataService = dataService;
             this.filter = filter;
             this.dialogs = dialogs;
+            this.assayWindows = assayWindows;
 
             // Контекстные меню гридов экрана: пункты и команды объявляются здесь.
             AddHoleSeamCommand = new AsyncCommand(AddHoleSeamAsync, () => CanAddHoleSeam);
@@ -237,7 +239,40 @@ namespace Geonicle.Wpf.ViewModels
         public override void Dispose()
         {
             filter.Changed -= OnFilterChanged;
+            assayWindows.CloseAll();   // окна анализов принадлежат экрану
             dataService.Dispose();
+        }
+
+        /// <summary>
+        /// Открывает окно «Анализы» пробы (двойной щелчок по нередактируемой ячейке грида проб).
+        /// Ввод анализов возможен только у сохранённой пробы; после записи анализов значения Ad в гриде проб перечитываются.
+        /// </summary>
+        public void OpenAssays(SampleRow? row)
+        {
+            if (row == null)
+                return;
+
+            if (row.SampleId == 0)
+            {
+                dialogs.Show("Сначала сохраните пробу: анализы вводятся только у сохранённой пробы.", "Анализы", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var title = string.IsNullOrWhiteSpace(row.Nsample) ? $"Анализы: проба ID {row.SampleId}" : $"Анализы: проба № {row.Nsample}";
+            assayWindows.Open(row.SampleId, title, () => Pending = RefreshSampleValuesAsync());
+        }
+
+        private async Task RefreshSampleValuesAsync()
+        {
+            try
+            {
+                await dataService.RefreshSampleValuesAsync();
+                RequestGridRefresh();   // значения Ad — из представления, сущности об изменениях не уведомляют
+            }
+            catch (Exception ex)
+            {
+                dialogs.Show(ex.InnerException?.Message ?? ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public Task AddHoleSeamAsync() =>

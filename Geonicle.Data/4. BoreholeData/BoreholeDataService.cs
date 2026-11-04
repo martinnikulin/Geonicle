@@ -210,7 +210,20 @@ namespace Geonicle.Data.Services
             }
             await context.Hssamps.Where(h => ids.Contains(h.SampleId)).LoadAsync();   // связи, добавленные триггером
 
-            var values = (await context.Samples.AsNoTracking().Where(v => ids.Contains(v.SampleId)).ToListAsync())
+            await RefreshSampleValuesAsync();
+        }
+
+        /// <summary>
+        /// Перечитывает только значения Ad из представления Samples (например, после записи анализов пробы).
+        /// Связи проб и несохранённые правки экрана не затрагиваются.
+        /// </summary>
+        public async Task RefreshSampleValuesAsync()
+        {
+            if (currentData == null)
+                return;
+
+            var ids = currentData.Samples.Select(r => r.SampleId).Where(id => id != 0).ToList();
+            var values = (await Context.Samples.AsNoTracking().Where(v => ids.Contains(v.SampleId)).ToListAsync())
                 .ToDictionary(v => v.SampleId);
             foreach (var row in currentData.Samples)
                 row.SetValues(values.GetValueOrDefault(row.SampleId));
@@ -293,6 +306,9 @@ namespace Geonicle.Data.Services
 
         /// <summary>Перечитать связи проб и значения Ad после сохранения (триггеры БД меняют связи).</summary>
         Task RefreshSamplesAsync();
+
+        /// <summary>Перечитать только значения Ad (связи и несохранённые правки не трогаются): после записи анализов пробы.</summary>
+        Task RefreshSampleValuesAsync();
 
         // Справочники для колонок; вызывать после LoadAsync.
         Task<IReadOnlyList<LookupItem>> GetSeamLookupAsync();

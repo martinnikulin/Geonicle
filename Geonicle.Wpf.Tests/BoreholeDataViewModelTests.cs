@@ -63,6 +63,14 @@ public sealed class FakeBoreholeData : IBoreholeDataService
 
     public void UpdateSampleView(int? holeSeamId, bool bySeam) => SampleViewCalls.Add((holeSeamId, bySeam));
 
+    public int ValueRefreshes { get; private set; }
+
+    public Task RefreshSampleValuesAsync()
+    {
+        ValueRefreshes++;
+        return Task.CompletedTask;
+    }
+
     public Task RefreshSamplesAsync()
     {
         SampleRefreshes++;
@@ -111,13 +119,26 @@ public sealed class FakeBoreholeData : IBoreholeDataService
     public void Dispose() => Disposed = true;
 }
 
+/// <summary>Заглушка окон «Анализы»: запоминает открытые окна и позволяет «сохранить» из теста.</summary>
+public sealed class FakeAssayWindows : IAssaysWindowService
+{
+    public List<(int SampleId, string Title, Action Saved)> Opened { get; } = new();
+
+    public int CloseAllCalls { get; private set; }
+
+    public void Open(int sampleId, string title, Action saved) => Opened.Add((sampleId, title, saved));
+
+    public void CloseAll() => CloseAllCalls++;
+}
+
 public class BoreholeDataViewModelTests
 {
     private readonly FakeDialogs dialogs = new();
     private readonly DataFilter filter = new();
     private readonly FakeBoreholeData service = new();
+    private readonly FakeAssayWindows windows = new();
 
-    private BoreholeDataViewModel Screen() => new(service, filter, dialogs);
+    private BoreholeDataViewModel Screen() => new(service, filter, dialogs, windows);
 
     private static BoreholeData Data(params SeamDef[] seams) =>
         new(new ObservableCollection<SeamDef>(seams), new ObservableCollection<Lithology>());
@@ -663,6 +684,77 @@ public class BoreholeDataViewModelTests
 
         Assert.Equal(1, service.SampleRefreshes);
         Assert.Single(service.SampleViewCalls);
+    }
+
+    [Fact]
+    public void Opening_assays_of_a_saved_sample_opens_its_window_with_a_title_from_the_sample_number()
+    {
+        var screen = Screen();
+
+        screen.OpenAssays(new SampleRow(new SampleDef { SampleId = 42, Nsample = "4117 сн.1" }));
+
+        var opened = Assert.Single(windows.Opened);
+        Assert.Equal(42, opened.SampleId);
+        Assert.Equal("Анализы: проба № 4117 сн.1", opened.Title);
+    }
+
+    [Fact]
+    public void Title_falls_back_to_the_sample_id_when_there_is_no_number()
+    {
+        var screen = Screen();
+
+        screen.OpenAssays(new SampleRow(new SampleDef { SampleId = 42, Nsample = " " }));
+
+        Assert.Equal("Анализы: проба ID 42", windows.Opened.Single().Title);
+    }
+
+    [Fact]
+    public void Unsaved_sample_cannot_have_assays_yet()
+    {
+        var screen = Screen();
+
+        screen.OpenAssays(new SampleRow());   // новая проба без ключа
+
+        Assert.Empty(windows.Opened);
+        var shown = Assert.Single(dialogs.Shown);
+        Assert.Contains("Сначала сохраните пробу", shown.Text);
+        Assert.Equal(MessageBoxImage.Warning, shown.Icon);
+    }
+
+    [Fact]
+    public void Opening_assays_without_a_row_does_nothing()
+    {
+        Screen().OpenAssays(null);
+
+        Assert.Empty(windows.Opened);
+        Assert.Empty(dialogs.Shown);
+    }
+
+    [Fact]
+    public async Task Saved_assays_refresh_only_the_ad_values_and_the_grids()
+    {
+        var screen = Screen();
+        screen.OpenAssays(new SampleRow(new SampleDef { SampleId = 42 }));
+        var refreshes = 0;
+        screen.RefreshRequested += (_, _) => refreshes++;
+        var linkRefreshesBefore = service.SampleRefreshes;
+
+        windows.Opened.Single().Saved();   // «ОК» в окне анализов
+        await screen.Pending;
+
+        Assert.Equal(1, service.ValueRefreshes);
+        Assert.Equal(linkRefreshesBefore, service.SampleRefreshes);   // связи проб и несохранённые правки не трогаются
+        Assert.Equal(1, refreshes);
+    }
+
+    [Fact]
+    public void Leaving_the_screen_closes_its_assay_windows()
+    {
+        var screen = Screen();
+
+        screen.Dispose();
+
+        Assert.Equal(1, windows.CloseAllCalls);
     }
 
     [Fact]
