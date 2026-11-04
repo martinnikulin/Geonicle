@@ -14,22 +14,16 @@
                                EventName="Loaded"/>
     </dxmvvm:Interaction.Behaviors>
 
-    <!-- Экран только размещает гриды: сверху «Пластопересечения» и «Средние», снизу «Литология» и «Анализы» (пробы).
+    <!-- Экран только размещает гриды: сверху одна группа вкладок «Пластопересечения» и «Средние», снизу «Литология» и «Анализы» (пробы).
          Колонки и настройки каждого грида — в его файле в папке экрана. -->
     <dxlc:LayoutControl Orientation="Vertical" Padding="0">
-        <dxlc:LayoutGroup Orientation="Horizontal"
+        <dxlc:LayoutGroup View="Tabs"
                           dxlc:LayoutControl.AllowVerticalSizing="True">
-            <dxlc:LayoutGroup View="Tabs"
-                              dxlc:LayoutControl.AllowHorizontalSizing="True">
-                <dxlc:LayoutGroup Header="Пластопересечения">
-                    <grids:SeamIntersectionsGrid />
-                </dxlc:LayoutGroup>
+            <dxlc:LayoutGroup Header="Пластопересечения">
+                <grids:SeamIntersectionsGrid />
             </dxlc:LayoutGroup>
-
-            <dxlc:LayoutGroup View="Tabs">
-                <dxlc:LayoutGroup Header="Средние">
-                    <grids:AveragesGrid />
-                </dxlc:LayoutGroup>
+            <dxlc:LayoutGroup Header="Средние">
+                <grids:AveragesGrid />
             </dxlc:LayoutGroup>
         </dxlc:LayoutGroup>
 
