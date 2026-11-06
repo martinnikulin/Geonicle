@@ -100,6 +100,90 @@
                         </dxb:BarEditItem>
                     </dxr:RibbonPageGroup>
 
+                    <!-- Видна на экране «Блоки подсчёта запасов». Списки и выбранные значения принадлежат модели экрана
+                         (CurrentViewModel): строки варианта правятся и сохраняются вместе с экраном. -->
+                    <dxr:RibbonPageGroup Caption="Блок" IsVisible="{Binding IsBlockGroupVisible}">
+                        <dxb:BarEditItem x:Name="versionItem"
+                                         Content="Версия"
+                                         EditWidth="120"
+                                         EditValue="{Binding CurrentViewModel.SelectedVersionId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxe:ComboBoxEditSettings
+                                    ItemsSource="{Binding Data.CurrentViewModel.Versions, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="Id"
+                                    DisplayMember="Name"
+                                    IsTextEditable="False" />
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+
+                        <!-- Выпадающий грид вариантов; «Ссылка на вариант» (RealCondId) правится в нём же. -->
+                        <dxb:BarEditItem x:Name="variantItem"
+                                         Content="Вариант"
+                                         EditWidth="160"
+                                         EditValue="{Binding CurrentViewModel.SelectedVariantId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxg:LookUpEditSettings
+                                    ItemsSource="{Binding Data.CurrentViewModel.Variants, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="ConditionId"
+                                    DisplayMember="Name"
+                                    AutoPopulateColumns="False"
+                                    IsTextEditable="False">
+                                    <dxg:LookUpEditSettings.PopupContentTemplate>
+                                        <ControlTemplate>
+                                            <dxg:GridControl x:Name="PART_GridControl" ShowBorder="False" AutoGenerateColumns="None">
+                                                <dxg:GridControl.Columns>
+                                                    <dxg:GridColumn FieldName="ConditionId" Header="Id" Width="60" ReadOnly="True" />
+                                                    <dxg:GridColumn FieldName="Number" Header="№" Width="40" ReadOnly="True" />
+                                                    <dxg:GridColumn FieldName="Name" Header="Вариант" Width="170" ReadOnly="True" />
+                                                    <dxg:GridColumn FieldName="RealCondId" Header="Ссылка на вариант" Width="170">
+                                                        <dxg:GridColumn.EditSettings>
+                                                            <dxe:ComboBoxEditSettings
+                                                                ItemsSource="{Binding Data.CurrentViewModel.ConditionLookup, Source={StaticResource ViewModelProxy}}"
+                                                                ValueMember="Id"
+                                                                DisplayMember="Name"
+                                                                IsTextEditable="False" />
+                                                        </dxg:GridColumn.EditSettings>
+                                                    </dxg:GridColumn>
+                                                </dxg:GridControl.Columns>
+                                                <dxg:GridControl.View>
+                                                    <dxg:TableView AutoWidth="True" ShowColumnHeaders="True" ShowGroupPanel="False" ShowIndicator="False" EditorShowMode="MouseDownFocused" />
+                                                </dxg:GridControl.View>
+                                            </dxg:GridControl>
+                                        </ControlTemplate>
+                                    </dxg:LookUpEditSettings.PopupContentTemplate>
+                                </dxg:LookUpEditSettings>
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+
+                        <dxb:BarEditItem x:Name="partItem"
+                                         Content="Деталь"
+                                         EditWidth="120"
+                                         EditValue="{Binding CurrentViewModel.SelectedPartId, Mode=TwoWay}">
+                            <dxb:BarEditItem.EditSettings>
+                                <dxg:LookUpEditSettings
+                                    ItemsSource="{Binding Data.CurrentViewModel.Parts, Source={StaticResource ViewModelProxy}}"
+                                    ValueMember="Id"
+                                    DisplayMember="Name"
+                                    AutoPopulateColumns="False"
+                                    IsTextEditable="False">
+                                    <dxg:LookUpEditSettings.PopupContentTemplate>
+                                        <ControlTemplate>
+                                            <dxg:GridControl x:Name="PART_GridControl" ShowBorder="False" AutoGenerateColumns="None">
+                                                <dxg:GridControl.Columns>
+                                                    <dxg:GridColumn FieldName="Id" Header="ID" Width="70" />
+                                                    <dxg:GridColumn FieldName="Name" Header="Деталь" Width="120" />
+                                                </dxg:GridControl.Columns>
+                                                <dxg:GridControl.View>
+                                                    <dxg:TableView AutoWidth="True" ShowColumnHeaders="True" ShowGroupPanel="False" ShowIndicator="False" AllowEditing="False" />
+                                                </dxg:GridControl.View>
+                                            </dxg:GridControl>
+                                        </ControlTemplate>
+                                    </dxg:LookUpEditSettings.PopupContentTemplate>
+                                </dxg:LookUpEditSettings>
+                            </dxb:BarEditItem.EditSettings>
+                        </dxb:BarEditItem>
+                    </dxr:RibbonPageGroup>
+
                     <!-- Видна на экранах, где данные фильтруются по разделяющему прослою. -->
                     <dxr:RibbonPageGroup Caption="Прослой" IsVisible="{Binding IsInterbedGroupVisible}">
                         <dxb:BarStaticItem x:Name="interbedCaptionItem" Content="Разделяющий прослой" />

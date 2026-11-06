@@ -23,6 +23,7 @@ public class MainViewModelTests
             .AddTransient<InterbedScreen>()
             .AddTransient<AllGroupsScreen>()
             .AddTransient<SeamScreen>()
+            .AddTransient<BlockScreen>()
             .BuildServiceProvider();
         var filters = new RibbonFilterViewModel(lookups, new DataFilter(), dialogs);
         main = new MainViewModel(provider, dialogs, filters);
@@ -180,6 +181,7 @@ public class MainViewModelTests
         Assert.False(main.IsInterbedGroupVisible);
         Assert.False(main.IsLineBoreholeGroupVisible);
         Assert.False(main.IsSeamGroupVisible);
+        Assert.False(main.IsBlockGroupVisible);
     }
 
     [Fact]
@@ -216,6 +218,19 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public async Task The_block_group_is_visible_only_on_screens_that_ask_for_it_and_its_lists_are_not_loaded_by_the_ribbon()
+    {
+        await main.NavigateAsync(typeof(BlockScreen));
+        Assert.True(main.IsDataGroupVisible && main.IsSeamGroupVisible && main.IsInterbedGroupVisible && main.IsBlockGroupVisible);
+        Assert.Equal(1, lookups.SeamCalls);       // пласт и прослой ленты загружаются,
+        Assert.Equal(1, lookups.InterbedCalls);
+        Assert.Equal(0, lookups.LineCalls);       // а списки блока принадлежат экрану
+
+        await main.NavigateAsync(typeof(SeamScreen));
+        Assert.False(main.IsBlockGroupVisible);
+    }
+
+    [Fact]
     public async Task Seams_and_interbeds_are_loaded_for_the_seam_screen_and_the_first_seam_is_selected()
     {
         await main.NavigateAsync(typeof(SeamScreen));
@@ -246,6 +261,7 @@ public class MainViewModelTests
         Assert.Contains(nameof(MainViewModel.IsInterbedGroupVisible), changed);
         Assert.Contains(nameof(MainViewModel.IsLineBoreholeGroupVisible), changed);
         Assert.Contains(nameof(MainViewModel.IsSeamGroupVisible), changed);
+        Assert.Contains(nameof(MainViewModel.IsBlockGroupVisible), changed);
     }
 
     [Fact]

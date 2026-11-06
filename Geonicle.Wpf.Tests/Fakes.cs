@@ -106,6 +106,17 @@ public class SeamScreen : TestScreen
         RibbonGroups.Data | RibbonGroups.Seam | RibbonGroups.Interbed;
 }
 
+/// <summary>Экран с группами «Пласт», «Прослой» и «Блок» (как «Блоки подсчёта запасов»).</summary>
+public class BlockScreen : TestScreen
+{
+    public BlockScreen(IUserDialogs dialogs) : base(dialogs)
+    {
+    }
+
+    public override RibbonGroups VisibleRibbonGroups =>
+        RibbonGroups.Data | RibbonGroups.Seam | RibbonGroups.Interbed | RibbonGroups.Block;
+}
+
 /// <summary>Экран со всеми группами (как «Данные по скважинам»).</summary>
 public class AllGroupsScreen : TestScreen
 {

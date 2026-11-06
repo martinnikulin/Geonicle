@@ -46,6 +46,8 @@ namespace Geonicle.Wpf.ViewModels
 
         public bool IsSeamGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Seam);
 
+        public bool IsBlockGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Block);
+
         public bool IsInterbedGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.Interbed);
 
         public bool IsLineBoreholeGroupVisible => CurrentRibbonGroups.HasFlag(RibbonGroups.LineBorehole);
@@ -54,6 +56,7 @@ namespace Geonicle.Wpf.ViewModels
         {
             RaisePropertyChanged(nameof(IsDataGroupVisible));
             RaisePropertyChanged(nameof(IsSeamGroupVisible));
+            RaisePropertyChanged(nameof(IsBlockGroupVisible));
             RaisePropertyChanged(nameof(IsInterbedGroupVisible));
             RaisePropertyChanged(nameof(IsLineBoreholeGroupVisible));
         }
