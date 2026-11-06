@@ -6,6 +6,13 @@ namespace Data.Models;
 
 public partial class BlockDetail
 {
+    /// <summary>Значения по умолчанию новой строки (как у столбцов БД): граница 100, целик 12.</summary>
+    public BlockDetail()
+    {
+        Boundary = 100;
+        Pillar = 12;
+    }
+
     public int Id { get; set; }
 
     public int BlockId { get; set; }

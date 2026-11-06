@@ -7,11 +7,19 @@ namespace Data.Models;
 
 public partial class Block
 {
+    /// <summary>Значения по умолчанию новой строки (как у столбцов БД): баланс включён, категория A, тип угля 5.</summary>
+    public Block()
+    {
+        Balance = true;
+        Category = BlockCategory.A;
+        CoalType = 5;
+    }
+
     public int BlockId { get; set; }
 
     public string BlockName { get; set; }
 
-    public int Category { get; set; }
+    public BlockCategory Category { get; set; }
 
     public decimal? AdCoal { get; set; }
 
