@@ -22,6 +22,7 @@ namespace Geonicle.Wpf
             collection.AddTransient<IBoreholeDataService, BoreholeDataService>();
             collection.AddTransient<IAssayService, AssayService>();
             collection.AddTransient<ISeamIntersectionsService, SeamIntersectionsService>();
+            collection.AddTransient<IReserveBlocksService, ReserveBlocksService>();
 
             collection.AddSingleton<IUserDialogs, UserDialogs>();
             collection.AddSingleton<DataFilter>();
@@ -32,6 +33,7 @@ namespace Geonicle.Wpf
             collection.AddTransient<SeamsViewModel>();
             collection.AddTransient<BoreholeDataViewModel>();
             collection.AddTransient<SeamIntersectionsViewModel>();
+            collection.AddTransient<ReserveBlocksViewModel>();
             collection.AddTransient<AssaysViewModel>();
             collection.AddTransient<IAssaysWindowService, AssaysWindowService>();
 

@@ -1,0 +1,78 @@
+<UserControl
+    x:Class="Geonicle.Wpf.Views.Grids.BlockDetailsGrid"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:models="clr-namespace:Data.Models;assembly=Geonicle.Data"
+    xmlns:helpers="clr-namespace:Geonicle.Wpf.Helpers"
+    xmlns:menus="clr-namespace:Geonicle.Wpf.Menus"
+    xmlns:behaviors="clr-namespace:Geonicle.Wpf.Behaviors">
+
+    <UserControl.Resources>
+        <!-- EditSettings колонок не видят DataContext, поэтому справочники берём через прокси. -->
+        <helpers:BindingProxy x:Key="ViewModelProxy" Data="{Binding}" />
+    </UserControl.Resources>
+
+    <!-- DataContext наследуется от экрана (ReserveBlocksViewModel). Колонки и настройки грида «Части блока» описаны только здесь.
+         Части добавляются и удаляются; запасы («Уголь» и «ГМ») считает процедура БД, только чтение. -->
+    <dxg:GridControl
+        ItemsSource="{Binding SelectedBlock.BlockDetails}"
+        ShowLoadingPanel="{Binding InitializeCommand.IsExecuting}"
+        AutoGenerateColumns="None"
+        behaviors:GridRefresh.RefreshOnSave="True"
+        RestoreStateKeyFieldName="Id"
+        RestoreStateOnSourceChange="True">
+
+        <dxg:GridControl.Columns>
+            <dxg:GridColumn FieldName="Id" Header="Id" ReadOnly="True" />
+            <dxg:GridColumn FieldName="Area" Header="Площадь" />
+            <dxg:GridColumn FieldName="Boundary" Header="Граница">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{Binding Data.BoundaryLookup, Source={StaticResource ViewModelProxy}}"
+                        ValueMember="Id"
+                        DisplayMember="Name"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+            <dxg:GridColumn FieldName="CoalGrade" Header="Марка">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{Binding Data.CoalGradeLookup, Source={StaticResource ViewModelProxy}}"
+                        ValueMember="Id"
+                        DisplayMember="Name"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+            <dxg:GridColumn FieldName="Pillar" Header="Целик">
+                <dxg:GridColumn.EditSettings>
+                    <dxe:ComboBoxEditSettings
+                        ItemsSource="{Binding Data.PillarLookup, Source={StaticResource ViewModelProxy}}"
+                        ValueMember="Id"
+                        DisplayMember="Name"
+                        IsTextEditable="False" />
+                </dxg:GridColumn.EditSettings>
+            </dxg:GridColumn>
+            <dxg:GridColumn FieldName="ResCoal" Header="Уголь" ReadOnly="True" />
+            <dxg:GridColumn FieldName="ResFull" Header="ГМ" ReadOnly="True" />
+        </dxg:GridControl.Columns>
+
+        <dxg:GridControl.TotalSummary>
+            <dxg:GridSummaryItem Alignment="Left" SummaryType="Count" />
+        </dxg:GridControl.TotalSummary>
+
+        <dxg:GridControl.View>
+            <dxg:TableView
+                menus:GridContextMenu.Menu="{Binding DetailsMenu}"
+                DataNavigatorButtons="Navigation, AddNewRow, DeleteFocusedRow"
+                ShowGroupPanel="False"
+                ShowDataNavigator="True"
+                AutoWidth="True"
+                IncrementalSearchMode="Enabled"
+                UseOnlyCurrentColumnInIncrementalSearch="True"
+                IncrementalSearchClearDelay="1500"
+                EditorShowMode="MouseDownFocused" />
+        </dxg:GridControl.View>
+    </dxg:GridControl>
+</UserControl>

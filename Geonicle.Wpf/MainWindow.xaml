@@ -32,6 +32,9 @@
         <DataTemplate DataType="{x:Type vm:SeamIntersectionsViewModel}">
             <views:SeamIntersectionsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReserveBlocksViewModel}">
+            <views:ReserveBlocksView />
+        </DataTemplate>
     </dx:ThemedWindow.Resources>
 
 
@@ -290,7 +293,7 @@
             </dxa:AccordionItem>
             <dxa:AccordionItem Header="Подсчет запасов">
                 <dxa:AccordionItem Header="Пластопересечения" Tag="{x:Type vm:SeamIntersectionsViewModel}" />
-                <dxa:AccordionItem Header="Блоки запасов" />
+                <dxa:AccordionItem Header="Блоки подсчета запасов" Tag="{x:Type vm:ReserveBlocksViewModel}" />
             </dxa:AccordionItem>
             <dxa:AccordionItem Header="Запросы" />
             <dxa:AccordionItem Header="Справочники">

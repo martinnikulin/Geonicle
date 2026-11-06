@@ -25,6 +25,8 @@ public class CompositionTests
     [InlineData(typeof(SeamsViewModel))]
     [InlineData(typeof(BoreholeDataViewModel))]
     [InlineData(typeof(SeamIntersectionsViewModel))]
+    [InlineData(typeof(ReserveBlocksViewModel))]
+    [InlineData(typeof(IReserveBlocksService))]
     [InlineData(typeof(ISeamIntersectionsService))]
     [InlineData(typeof(AssaysViewModel))]
     [InlineData(typeof(IAssayService))]
